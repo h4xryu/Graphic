@@ -35,6 +35,7 @@ namespace Graphic
         {
             components = new System.ComponentModel.Container();
             glControl1 = new GLControl();
+            closeBtn = new Button();
             label1 = new System.Windows.Forms.Label();
             zedGraphControl1 = new ZedGraphControl();
             SuspendLayout();
@@ -45,7 +46,7 @@ namespace Graphic
             glControl1.BackColor = Color.FromArgb(3, 8, 15);
             glControl1.BackgroundImageLayout = ImageLayout.None;
             glControl1.ForeColor = Color.FromArgb(3, 8, 15);
-            glControl1.Location = new Point(1016, 464);
+            glControl1.Location = new Point(1016, 407);
             glControl1.Margin = new Padding(3, 4, 3, 4);
             glControl1.Name = "glControl1";
             glControl1.Size = new Size(430, 291);
@@ -53,6 +54,20 @@ namespace Graphic
             glControl1.TabStop = false;
             glControl1.VSync = false;
             glControl1.Load += glControl1_Load_1;
+            // 
+            // closeBtn
+            // 
+            closeBtn.BackColor = Color.FromArgb(15, 30, 45);
+            closeBtn.FlatStyle = FlatStyle.Popup;
+            closeBtn.Location = new Point(1358, 750);
+            closeBtn.Margin = new Padding(0);
+            closeBtn.Name = "closeBtn";
+            closeBtn.Size = new Size(88, 23);
+            closeBtn.TabIndex = 0;
+            closeBtn.TabStop = false;
+            closeBtn.Text = "close";
+            closeBtn.UseVisualStyleBackColor = false;
+            closeBtn.Click += closeBtn_Click;
             // 
             // label1
             // 
@@ -68,7 +83,8 @@ namespace Graphic
             // 
             // zedGraphControl1
             // 
-            zedGraphControl1.Location = new Point(72, 392);
+            zedGraphControl1.ForeColor = SystemColors.ControlLightLight;
+            zedGraphControl1.Location = new Point(72, 335);
             zedGraphControl1.Margin = new Padding(3, 4, 3, 4);
             zedGraphControl1.Name = "zedGraphControl1";
             zedGraphControl1.ScrollGrace = 0D;
@@ -88,11 +104,14 @@ namespace Graphic
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.FromArgb(3, 8, 15);
+            BackgroundImageLayout = ImageLayout.None;
             ClientSize = new Size(1493, 796);
             Controls.Add(label1);
             Controls.Add(glControl1);
             Controls.Add(zedGraphControl1);
-            Margin = new Padding(2, 2, 2, 2);
+            Controls.Add(closeBtn);
+            FormBorderStyle = FormBorderStyle.None;
+            Margin = new Padding(2);
             Name = "PaintForm";
             Text = "PaintForm";
             Load += PaintForm_Load;
@@ -102,6 +121,7 @@ namespace Graphic
 
         #endregion
         private GLControl glControl1;
+        private Button closeBtn;
         private ZedGraphControl zedGraphControl1;
         private System.Windows.Forms.Label label1;
         

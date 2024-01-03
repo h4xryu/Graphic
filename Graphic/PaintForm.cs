@@ -2,6 +2,7 @@ using System.Drawing;
 using System.Windows.Forms;
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
+using ZedGraph;
 namespace Graphic
 {
     public partial class PaintForm : Form
@@ -13,8 +14,10 @@ namespace Graphic
 
         public PaintForm()
         {
+
             this.Paint += new System.Windows.Forms.PaintEventHandler(PaintForm_Paint);
             InitializeComponent();
+            Graph_init();
         }
 
         private void PaintForm_Paint(object sender, PaintEventArgs e)
@@ -209,7 +212,12 @@ namespace Graphic
 
         private void zedGraphControl1_Load(object sender, EventArgs e)
         {
-            Graph_init();
+
+        }
+
+        private void closeBtn_Click(object sender, EventArgs e)
+        {
+            Application.Exit();
         }
     }
 }
