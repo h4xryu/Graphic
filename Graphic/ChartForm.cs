@@ -37,11 +37,14 @@ namespace Graphic
             MyPane.YAxis.Title.FontSpec.FontColor = Color.White;
             MyPane.Title.FontSpec.FontColor = Color.White;
             MyPane.Border.Color = Color.FromArgb(3, 8, 15);
-            MyPane.XAxis.Scale.MinorStep = 1;    //작은 눈금 
+            MyPane.Title.Text = "";
+            MyPane.XAxis.Title.Text = "";
+            MyPane.YAxis.Title.Text = "";
+            MyPane.XAxis.Scale.MinorStep = 5;    //작은 눈금 
             MyPane.XAxis.Scale.MajorStep = 10;   //큰 눈금
             MyPane.XAxis.Scale.Min = 0;
             MyPane.XAxis.Scale.Max = 100;
-            MyPane.YAxis.Scale.MinorStep = 1;
+            MyPane.YAxis.Scale.MinorStep = 5;
             MyPane.YAxis.Scale.MajorStep = 10;
             MyPane.YAxis.Scale.Min = 0;
             MyPane.YAxis.Scale.Max = 100;
