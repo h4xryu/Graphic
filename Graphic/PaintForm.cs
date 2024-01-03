@@ -54,7 +54,8 @@ namespace Graphic
                 GL.Enable(EnableCap.PointSmooth);
             }
 
-            mesh1 = new ObjMesh("C:/object/AircraftTest.obj");
+            //mesh1 = new ObjMesh("C:/object/AircraftTest.obj");
+            mesh1 = new ObjMesh(Application.StartupPath + "\\Aircraft.obj");
             mesh1.Prepare();
 
             float aspect_ratio = this.Width / (float)this.Height;
