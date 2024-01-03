@@ -1,4 +1,5 @@
 ﻿using OpenTK;
+using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL;
 using ZedGraph;
 
@@ -44,10 +45,10 @@ namespace Graphic
             glControl1.BackColor = Color.FromArgb(3, 8, 15);
             glControl1.BackgroundImageLayout = ImageLayout.None;
             glControl1.ForeColor = Color.FromArgb(3, 8, 15);
-            glControl1.Location = new Point(1306, 619);
-            glControl1.Margin = new Padding(4, 5, 4, 5);
+            glControl1.Location = new Point(1016, 464);
+            glControl1.Margin = new Padding(3, 4, 3, 4);
             glControl1.Name = "glControl1";
-            glControl1.Size = new Size(553, 388);
+            glControl1.Size = new Size(430, 291);
             glControl1.TabIndex = 1;
             glControl1.TabStop = false;
             glControl1.VSync = false;
@@ -57,17 +58,18 @@ namespace Graphic
             // 
             label1.AutoSize = true;
             label1.ForeColor = SystemColors.ControlLightLight;
-            label1.Location = new Point(93, 268);
+            label1.Location = new Point(72, 201);
+            label1.Margin = new Padding(2, 0, 2, 0);
             label1.Name = "label1";
-            label1.Size = new Size(65, 20);
+            label1.Size = new Size(52, 15);
             label1.TabIndex = 2;
             label1.Text = "Matrix : ";
             label1.Click += label1_Click;
             // 
             // zedGraphControl1
             // 
-            zedGraphControl1.Location = new Point(93, 523);
-            zedGraphControl1.Margin = new Padding(4, 5, 4, 5);
+            zedGraphControl1.Location = new Point(72, 392);
+            zedGraphControl1.Margin = new Padding(3, 4, 3, 4);
             zedGraphControl1.Name = "zedGraphControl1";
             zedGraphControl1.ScrollGrace = 0D;
             zedGraphControl1.ScrollMaxX = 0D;
@@ -76,19 +78,21 @@ namespace Graphic
             zedGraphControl1.ScrollMinX = 0D;
             zedGraphControl1.ScrollMinY = 0D;
             zedGraphControl1.ScrollMinY2 = 0D;
-            zedGraphControl1.Size = new Size(894, 484);
+            zedGraphControl1.Size = new Size(695, 363);
             zedGraphControl1.TabIndex = 3;
             zedGraphControl1.UseExtendedPrintDialog = true;
+            zedGraphControl1.Load += zedGraphControl1_Load;
             // 
             // PaintForm
             // 
-            AutoScaleDimensions = new SizeF(9F, 20F);
+            AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.FromArgb(3, 8, 15);
-            ClientSize = new Size(1920, 1080);
+            ClientSize = new Size(1493, 796);
             Controls.Add(label1);
             Controls.Add(glControl1);
             Controls.Add(zedGraphControl1);
+            Margin = new Padding(2, 2, 2, 2);
             Name = "PaintForm";
             Text = "PaintForm";
             Load += PaintForm_Load;

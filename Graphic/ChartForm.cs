@@ -26,7 +26,6 @@ namespace Graphic
             GraphPane MyPane = zedGraphControl1.GraphPane;
             MyPane.Title.Text = "My Zed Graph";
             MyPane.Chart.Fill = new Fill(Color.Black, Color.Black, 180.0f);
-
             /**********x축 y축 설정**********/
             MyPane.XAxis.Title.Text = "Time (1s)";
             MyPane.XAxis.Scale.MinorStep = 1;    //작은 눈금 

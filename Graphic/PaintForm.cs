@@ -1,4 +1,5 @@
 using System.Drawing;
+using System.Windows.Forms;
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
 namespace Graphic
@@ -88,9 +89,10 @@ namespace Graphic
 
         private void glControl1_Paint(object sender, PaintEventArgs e)
         {
+            GL.ClearColor(Color.FromArgb(3, 8, 15));
             GL.Clear(ClearBufferMask.ColorBufferBit |
-                     ClearBufferMask.DepthBufferBit |
-                     ClearBufferMask.StencilBufferBit);
+                     ClearBufferMask.DepthBufferBit
+                     | ClearBufferMask.StencilBufferBit);
 
             if (HighQuality)
             {
@@ -109,16 +111,12 @@ namespace Graphic
             GL.Rotate(angleZ, 0, 0, 1.0f);
             GL.Rotate(angleY, 1.0f, 0, 0);
             GL.Rotate(angleX, 0, 1.0f, 0);
-           
+
             // draw a VBO:
             mesh1.Render();
 
             glControl1.SwapBuffers();
-            if (left_flag == 1 && job == 0)
-            {
-                left_flag = 0;
-                job =1;
-            }
+
         }
 
         #region GLControl. Mouse event handlers
@@ -154,14 +152,14 @@ namespace Graphic
                 //GL.Viewport((int)panX, (int)panY, glControl1.Width, glControl1.Height); // Use all of the glControl painting area
                 //this.Cursor = Cursors.Hand;
 
-                
-                // angleY -= (e.Y - _mouseStartY);
-                
-                angleZ += (e.X - _mouseStartX);
-                        
-                    
 
-                
+                // angleY -= (e.Y - _mouseStartY);
+
+                angleZ += (e.X - _mouseStartX);
+
+
+
+
                 this.Cursor = Cursors.Cross;
                 glControl1.Invalidate();
             }
@@ -199,7 +197,7 @@ namespace Graphic
             glControl1.MouseUp += glControl1_MouseUp;
             glControl1.Paint += glControl1_Paint;
 
-            GL.ClearColor(Color.DarkSlateGray);
+            GL.ClearColor(Color.FromArgb(3, 8, 15));
             GL.Color3(1f, 1f, 1f); // Points Color
             SetupViewport();
         }
@@ -207,6 +205,11 @@ namespace Graphic
         private void label1_Click(object sender, EventArgs e)
         {
 
+        }
+
+        private void zedGraphControl1_Load(object sender, EventArgs e)
+        {
+            Graph_init();
         }
     }
 }
