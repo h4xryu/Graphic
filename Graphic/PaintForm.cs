@@ -131,11 +131,14 @@ namespace Graphic
         private float panY = 0;
         private int job = 0;
         private int left_flag = 0;
+        private int right_flag = 0;
+
         private void glControl_MouseMove(object sender, MouseEventArgs e)
         {
             if (e.Button == MouseButtons.Right)
             {
-                angleZ += (e.X - _mouseStartX);
+                right_flag = 1;
+                angleX -= (e.X - _mouseStartX);
                 angleY -= (e.Y - _mouseStartY);
 
                 this.Cursor = Cursors.Cross;
@@ -154,7 +157,7 @@ namespace Graphic
                 
                 // angleY -= (e.Y - _mouseStartY);
                 
-                angleX -= (e.X - _mouseStartX);
+                angleZ += (e.X - _mouseStartX);
                         
                     
 
@@ -178,6 +181,7 @@ namespace Graphic
         private void glControl1_MouseUp(object sender, MouseEventArgs e)
         {
             left_flag = 0;
+            right_flag = 0;
             this.Cursor = Cursors.Default;
             angleX = 0.0f;
             angleY = 0.0f;

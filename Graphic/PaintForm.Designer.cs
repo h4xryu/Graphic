@@ -1,5 +1,7 @@
 ﻿using OpenTK;
 using OpenTK.Graphics.OpenGL;
+using ZedGraph;
+
 namespace Graphic
 {
     partial class PaintForm
@@ -30,15 +32,19 @@ namespace Graphic
         /// </summary>
         private void InitializeComponent()
         {
+            components = new System.ComponentModel.Container();
             glControl1 = new GLControl();
-            label1 = new Label();
+            label1 = new System.Windows.Forms.Label();
+            zedGraphControl1 = new ZedGraphControl();
             SuspendLayout();
             // 
             // glControl1
             // 
             glControl1.AutoValidate = AutoValidate.EnablePreventFocusChange;
             glControl1.BackColor = Color.FromArgb(3, 8, 15);
-            glControl1.Location = new Point(1283, 152);
+            glControl1.BackgroundImageLayout = ImageLayout.None;
+            glControl1.ForeColor = Color.FromArgb(3, 8, 15);
+            glControl1.Location = new Point(1306, 619);
             glControl1.Margin = new Padding(4, 5, 4, 5);
             glControl1.Name = "glControl1";
             glControl1.Size = new Size(553, 388);
@@ -58,6 +64,22 @@ namespace Graphic
             label1.Text = "Matrix : ";
             label1.Click += label1_Click;
             // 
+            // zedGraphControl1
+            // 
+            zedGraphControl1.Location = new Point(93, 523);
+            zedGraphControl1.Margin = new Padding(4, 5, 4, 5);
+            zedGraphControl1.Name = "zedGraphControl1";
+            zedGraphControl1.ScrollGrace = 0D;
+            zedGraphControl1.ScrollMaxX = 0D;
+            zedGraphControl1.ScrollMaxY = 0D;
+            zedGraphControl1.ScrollMaxY2 = 0D;
+            zedGraphControl1.ScrollMinX = 0D;
+            zedGraphControl1.ScrollMinY = 0D;
+            zedGraphControl1.ScrollMinY2 = 0D;
+            zedGraphControl1.Size = new Size(894, 484);
+            zedGraphControl1.TabIndex = 3;
+            zedGraphControl1.UseExtendedPrintDialog = true;
+            // 
             // PaintForm
             // 
             AutoScaleDimensions = new SizeF(9F, 20F);
@@ -66,6 +88,7 @@ namespace Graphic
             ClientSize = new Size(1920, 1080);
             Controls.Add(label1);
             Controls.Add(glControl1);
+            Controls.Add(zedGraphControl1);
             Name = "PaintForm";
             Text = "PaintForm";
             Load += PaintForm_Load;
@@ -75,6 +98,8 @@ namespace Graphic
 
         #endregion
         private GLControl glControl1;
-        private Label label1;
+        private ZedGraphControl zedGraphControl1;
+        private System.Windows.Forms.Label label1;
+        
     }
 }
