@@ -34,7 +34,7 @@ namespace Graphic
             g.DrawString("Create Graphics!!", new Font("±¼¸²", 20), Brushes.Black, 50, 80);
         }
 
-        
+
         private void SetupViewport()
         {
             if (this.WindowState == FormWindowState.Minimized) return;
@@ -54,7 +54,7 @@ namespace Graphic
                 GL.Enable(EnableCap.PointSmooth);
             }
 
-            mesh1 = new ObjMesh("C:/object/Aircraft.obj");
+            mesh1 = new ObjMesh("C:/object/AircraftTest.obj");
             mesh1.Prepare();
 
             float aspect_ratio = this.Width / (float)this.Height;
@@ -97,7 +97,7 @@ namespace Graphic
                     new float[] { 0, 0, (float)Math.Pow(1 / (projection.M11 * Width / 2), 2) });
             }
 
-            modelview = Matrix4.LookAt(0f, 20f, zoomFactor, 0, 0, 0, 0.0f, 1.0f, 0.0f);
+            modelview = Matrix4.LookAt(0.0f, 16f, zoomFactor, 0, 0, 0, 0.0f, 1.0f, 0.0f);
             var aspect_ratio = Width / (float)Height;
             projection = Matrix4.CreatePerspectiveFieldOfView(MathHelper.PiOver6, aspect_ratio, 1, 256);
 
@@ -105,13 +105,19 @@ namespace Graphic
             GL.LoadMatrix(ref projection);
             GL.MatrixMode(MatrixMode.Modelview);
             GL.LoadMatrix(ref modelview);
+            GL.Rotate(angleZ, 0, 0, 1.0f);
             GL.Rotate(angleY, 1.0f, 0, 0);
             GL.Rotate(angleX, 0, 1.0f, 0);
-
+           
             // draw a VBO:
             mesh1.Render();
 
             glControl1.SwapBuffers();
+            if (left_flag == 1 && job == 0)
+            {
+                left_flag = 0;
+                job =1;
+            }
         }
 
         #region GLControl. Mouse event handlers
@@ -119,14 +125,16 @@ namespace Graphic
         private int _mouseStartY = 0;
         private float angleX = 0;
         private float angleY = 0;
+        private float angleZ = 0;
         private float panX = 0;
         private float panY = 0;
-
+        private int job = 0;
+        private int left_flag = 0;
         private void glControl_MouseMove(object sender, MouseEventArgs e)
         {
             if (e.Button == MouseButtons.Right)
             {
-                angleX += (e.X - _mouseStartX);
+                angleZ += (e.X - _mouseStartX);
                 angleY -= (e.Y - _mouseStartY);
 
                 this.Cursor = Cursors.Cross;
@@ -135,10 +143,22 @@ namespace Graphic
             }
             if (e.Button == MouseButtons.Left)
             {
-                panX += (e.X - _mouseStartX);
-                panY -= (e.Y - _mouseStartY);
-                GL.Viewport((int)panX, (int)panY, glControl1.Width, glControl1.Height); // Use all of the glControl painting area
-                this.Cursor = Cursors.Hand;
+
+                left_flag = 1;
+                //panX += (e.X - _mouseStartX);
+                //panY -= (e.Y - _mouseStartY);
+                //GL.Viewport((int)panX, (int)panY, glControl1.Width, glControl1.Height); // Use all of the glControl painting area
+                //this.Cursor = Cursors.Hand;
+
+                
+                // angleY -= (e.Y - _mouseStartY);
+                
+                angleX -= (e.X - _mouseStartX);
+                        
+                    
+
+                
+                this.Cursor = Cursors.Cross;
                 glControl1.Invalidate();
             }
             _mouseStartX = e.X;
@@ -156,7 +176,15 @@ namespace Graphic
 
         private void glControl1_MouseUp(object sender, MouseEventArgs e)
         {
+            left_flag = 0;
             this.Cursor = Cursors.Default;
+            angleX = 0.0f;
+            angleY = 0.0f;
+            angleZ = 0.0f;
+            job = 0;
+            GL.LoadIdentity();
+            glControl1.Invalidate();
+
         }
 
         private void glControl1_Load_1(object sender, EventArgs e)
@@ -169,6 +197,11 @@ namespace Graphic
             GL.ClearColor(Color.DarkSlateGray);
             GL.Color3(1f, 1f, 1f); // Points Color
             SetupViewport();
+        }
+
+        private void label1_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }

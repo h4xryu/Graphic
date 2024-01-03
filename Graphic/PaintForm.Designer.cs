@@ -31,48 +31,50 @@ namespace Graphic
         private void InitializeComponent()
         {
             glControl1 = new GLControl();
-            btnPaint = new Button();
+            label1 = new Label();
             SuspendLayout();
             // 
             // glControl1
             // 
             glControl1.AutoValidate = AutoValidate.EnablePreventFocusChange;
-            glControl1.BackColor = Color.Black;
-            glControl1.Location = new Point(374, 120);
+            glControl1.BackColor = Color.FromArgb(3, 8, 15);
+            glControl1.Location = new Point(1283, 152);
             glControl1.Margin = new Padding(4, 5, 4, 5);
             glControl1.Name = "glControl1";
-            glControl1.Size = new Size(182, 106);
+            glControl1.Size = new Size(553, 388);
             glControl1.TabIndex = 1;
             glControl1.TabStop = false;
             glControl1.VSync = false;
             glControl1.Load += glControl1_Load_1;
             // 
-            // btnPaint
+            // label1
             // 
-            btnPaint.Location = new Point(107, 160);
-            btnPaint.Name = "btnPaint";
-            btnPaint.Size = new Size(94, 29);
-            btnPaint.TabIndex = 0;
-            btnPaint.Text = "Paint";
-            btnPaint.UseVisualStyleBackColor = true;
-            btnPaint.Click += btnPaint_Click;
+            label1.AutoSize = true;
+            label1.ForeColor = SystemColors.ControlLightLight;
+            label1.Location = new Point(93, 268);
+            label1.Name = "label1";
+            label1.Size = new Size(65, 20);
+            label1.TabIndex = 2;
+            label1.Text = "Matrix : ";
+            label1.Click += label1_Click;
             // 
             // PaintForm
             // 
             AutoScaleDimensions = new SizeF(9F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
+            BackColor = Color.FromArgb(3, 8, 15);
             ClientSize = new Size(1920, 1080);
-            Controls.Add(btnPaint);
+            Controls.Add(label1);
             Controls.Add(glControl1);
             Name = "PaintForm";
             Text = "PaintForm";
             Load += PaintForm_Load;
             ResumeLayout(false);
+            PerformLayout();
         }
 
         #endregion
-
-        private Button btnPaint;
         private GLControl glControl1;
+        private Label label1;
     }
 }
