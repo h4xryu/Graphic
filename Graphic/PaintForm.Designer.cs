@@ -205,7 +205,7 @@ namespace Graphic
             // PaintForm
             // 
             StartPosition = FormStartPosition.Manual;
-            Location = new Point(300,200);
+            Location = new Point(200,100);
             AutoScaleDimensions = new SizeF(9F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.FromArgb(3, 8, 15);

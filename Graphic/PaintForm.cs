@@ -16,7 +16,8 @@ namespace Graphic
         Matrix4 modelview, projection;
         ObjMesh mesh1 = null;
         const bool HighQuality = true;
-        private int command_bufsize = 0; 
+        private int command_bufsize = 0;
+        private Thread term;
         public PaintForm()
         {
 
@@ -237,6 +238,7 @@ namespace Graphic
         private void btnSerial_Click(object sender, EventArgs e)
         {
             button_send.Enabled = true;
+
             if (!serialPort1.IsOpen)  //시리얼포트가 열려 있지 않으면
             {
 
@@ -244,6 +246,8 @@ namespace Graphic
                 try
                 {
                     serialPort1.Open();  //시리얼포트 열기
+                    
+                    serialPort1.Write("$");
                 }
                 catch (Exception err)
                 {
@@ -265,13 +269,14 @@ namespace Graphic
         }
         private void MySerialReceived(object s, EventArgs e)  //여기에서 수신 데이타를 사용자의 용도에 따라 처리한다.
         {
-            Thread term = new Thread(Terminal_thread);
+            term = new Thread(Terminal_thread);
             term.Start();
-            
+            term.IsBackground = true;
         }
         private void Button_send_Click(object sender, EventArgs e)  //보내기 버튼을 클릭하면
         {
             serialPort1.Write(textBox_send.Text);  //텍스트박스의 텍스트를 시리얼통신으로 송신
+            textBox_send.Text = string.Empty;
         }
 
         private void button_disconnect_Click_1(object sender, EventArgs e)
@@ -279,6 +284,7 @@ namespace Graphic
             button_send.Enabled = false;
             if (serialPort1.IsOpen)  //시리얼포트가 열려 있으면
             {
+                serialPort1.Write("^");
                 serialPort1.Close();  //시리얼포트 닫기
 
                 label_status.Text = "포트가 닫혔습니다.";
@@ -290,57 +296,69 @@ namespace Graphic
             }
         }
 
-        private void Terminal_thread() 
+        private void Terminal_thread()
         {
-            string ReceiveData = (string)serialPort1.ReadLine();  //시리얼 버터에 수신된 데이타를 ReceiveData 읽어오기
+            string? ReceiveData = string.Empty;
+            try 
+            { 
+                ReceiveData = (string)serialPort1.ReadLine();//시리얼 버터에 수신된 데이타를 ReceiveData 읽어오기
+                string[] lines = ReceiveData.Split(new string[] { "\n\r", "\r", "\n" }, StringSplitOptions.None);
 
-            if (ReceiveData.Equals("$", StringComparison.OrdinalIgnoreCase)) // 데이터 받는 부분
-            {
-
-            }
-
-            try
-            {
-                if (command_bufsize < 16) // 터미널 박스 과부화 방지
+                foreach (string cmdLine in lines)
                 {
-
-                    if (richTextBox_received.InvokeRequired)
+                    if (cmdLine.Equals("Waiting for devices..", StringComparison.OrdinalIgnoreCase)) // 데이터 시작 부분
                     {
-                        richTextBox_received.Invoke(new MethodInvoker(() => { richTextBox_received.Text = richTextBox_received.Text + ReceiveData; }));
+                        //MessageBox.Show("test1");
                     }
-                    else richTextBox_received.Text = richTextBox_received.Text + ReceiveData;
-
-
-                    command_bufsize++;
-                }
-                else
-                {
-
-                    if (richTextBox_received.InvokeRequired)
+                    else if (cmdLine.Equals("Data Received", StringComparison.OrdinalIgnoreCase)) // 데이터 시작 부분
                     {
-                        richTextBox_received.Invoke(new MethodInvoker(() =>
-                        {
-                            int startIndex = richTextBox_received.GetFirstCharIndexFromLine(0);
-                            int endIndex = richTextBox_received.GetFirstCharIndexFromLine(1) - 1;
-                            richTextBox_received.Select(startIndex, endIndex - startIndex + 1);
-                            richTextBox_received.SelectedText = string.Empty;
-                            richTextBox_received.Invoke(new MethodInvoker(() => { richTextBox_received.Text = richTextBox_received.Text + ReceiveData; }));
-                        }));
+                        //MessageBox.Show("test1");
                     }
-                    else richTextBox_received.Text = richTextBox_received.Text + ReceiveData;
+
+                    else if (cmdLine.StartsWith("acc : (", StringComparison.OrdinalIgnoreCase)) // acc 데이터 받는 부분
+                    {
+                        //MessageBox.Show("test2"); //데이터 버퍼에 저장
+                        if (cmdLine.EndsWith(")", StringComparison.OrdinalIgnoreCase)) //버퍼저장 종료
+                    }
                 }
 
-                                     
+            }  
+            catch (Exception err)
+            {
+                
             }
-            catch (Exception err) { richTextBox_received.Invoke(new MethodInvoker(() => 
+
+            
+
+            if (command_bufsize < 16) // 터미널 박스 과부화 방지
             {
 
                 if (richTextBox_received.InvokeRequired)
                 {
-                    richTextBox_received.Text = err.Message;
+                    richTextBox_received.Invoke(new MethodInvoker(() => { richTextBox_received.Text += ReceiveData; }));
                 }
-                else richTextBox_received.Text = richTextBox_received.Text + err.Message;}));
+                else richTextBox_received.Text = richTextBox_received.Text + ReceiveData;
+
+
+                command_bufsize++;
             }
+            else
+            {
+
+                if (richTextBox_received.InvokeRequired)
+                {
+                    richTextBox_received.Invoke(new MethodInvoker(() =>
+                    {
+                        int startIndex = richTextBox_received.GetFirstCharIndexFromLine(0);
+                        int endIndex = richTextBox_received.GetFirstCharIndexFromLine(1) - 1;
+                        richTextBox_received.Select(startIndex, endIndex - startIndex + 1);
+                        richTextBox_received.SelectedText = string.Empty;
+                        richTextBox_received.Invoke(new MethodInvoker(() => { richTextBox_received.Text += ReceiveData; }));
+                    }));
+                }
+                else richTextBox_received.Text = richTextBox_received.Text + ReceiveData;
+            }
+    
         }
     }
 }
