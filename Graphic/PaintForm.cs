@@ -12,6 +12,9 @@ namespace Graphic
 
     public partial class PaintForm : Form
     {
+        private System.Text.ASCIIEncoding asciiEncodingSealed1 = new System.Text.ASCIIEncoding();
+        private System.Text.DecoderReplacementFallback decoderReplacementFallback1 = new System.Text.DecoderReplacementFallback();
+        private System.Text.EncoderReplacementFallback encoderReplacementFallback1 = new System.Text.EncoderReplacementFallback();
         ushort uigrp = 0;
         Matrix4 modelview, projection;
         ObjMesh mesh1 = null;
@@ -247,7 +250,7 @@ namespace Graphic
                 {
                     serialPort1.Open();  //시리얼포트 열기
                     
-                    serialPort1.Write("$");
+                    
                 }
                 catch (Exception err)
                 {
@@ -284,7 +287,7 @@ namespace Graphic
             button_send.Enabled = false;
             if (serialPort1.IsOpen)  //시리얼포트가 열려 있으면
             {
-                serialPort1.Write("^");
+                command_bufsize = 0;
                 serialPort1.Close();  //시리얼포트 닫기
 
                 label_status.Text = "포트가 닫혔습니다.";
@@ -306,9 +309,9 @@ namespace Graphic
 
                 foreach (string cmdLine in lines)
                 {
-                    if (cmdLine.Equals("Waiting for devices..", StringComparison.OrdinalIgnoreCase)) // 데이터 시작 부분
+                    if (cmdLine.Equals("Waiting for starting...", StringComparison.OrdinalIgnoreCase)) // 데이터 시작 부분
                     {
-                        //MessageBox.Show("test1");
+                        serialPort1.Write("$");
                     }
                     else if (cmdLine.Equals("Data Received", StringComparison.OrdinalIgnoreCase)) // 데이터 시작 부분
                     {
@@ -320,24 +323,26 @@ namespace Graphic
                         //MessageBox.Show("test2"); //데이터 버퍼에 저장
                         if (cmdLine.EndsWith(")", StringComparison.OrdinalIgnoreCase)) { } //버퍼저장 종료
                     }
+
+                    //. . .
+
+                    else if (cmdLine.StartsWith("End of datas.", StringComparison.OrdinalIgnoreCase)) // acc 데이터 받는 부분
+                    {
+                        serialPort1.Write("^"); //흐름제어
+                       
+                    }
                 }
 
             }  
             catch (Exception err)
             {
-                
             }
 
-            
-
-            if (command_bufsize < 16) // 터미널 박스 과부화 방지
+            if (command_bufsize < 1024) // 터미널 박스 과부화 방지
             {
 
-                if (richTextBox_received.InvokeRequired)
-                {
-                    richTextBox_received.Invoke(new MethodInvoker(() => { richTextBox_received.Text += ReceiveData; }));
-                }
-                else richTextBox_received.Text = richTextBox_received.Text + ReceiveData;
+                if (richTextBox_received.InvokeRequired) richTextBox_received.Invoke(new MethodInvoker(() => { richTextBox_received.AppendText(ReceiveData); }));
+                else richTextBox_received.AppendText(ReceiveData);
 
 
                 command_bufsize++;
@@ -351,14 +356,18 @@ namespace Graphic
                     {
                         int startIndex = richTextBox_received.GetFirstCharIndexFromLine(0);
                         int endIndex = richTextBox_received.GetFirstCharIndexFromLine(1) - 1;
-                        richTextBox_received.Select(startIndex, endIndex - startIndex + 1);
-                        richTextBox_received.SelectedText = string.Empty;
-                        richTextBox_received.Invoke(new MethodInvoker(() => { richTextBox_received.Text += ReceiveData; }));
+                        if (endIndex - startIndex + 1 > 1024)
+                        {
+                            richTextBox_received.Select(startIndex, endIndex - startIndex + 1);
+                            richTextBox_received.SelectedText = string.Empty;
+                        }
+                        richTextBox_received.Invoke(new MethodInvoker(() => { richTextBox_received.AppendText(ReceiveData); }));
                     }));
                 }
-                else richTextBox_received.Text = richTextBox_received.Text + ReceiveData;
+                else  richTextBox_received.AppendText(ReceiveData); 
+            
             }
-    
+            richTextBox_received.Invoke(new MethodInvoker(() => { richTextBox_received.ScrollToCaret(); }));
         }
     }
 }
