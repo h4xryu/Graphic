@@ -318,7 +318,7 @@ namespace Graphic
                     else if (cmdLine.StartsWith("acc : (", StringComparison.OrdinalIgnoreCase)) // acc 데이터 받는 부분
                     {
                         //MessageBox.Show("test2"); //데이터 버퍼에 저장
-                        if (cmdLine.EndsWith(")", StringComparison.OrdinalIgnoreCase)) //버퍼저장 종료
+                        if (cmdLine.EndsWith(")", StringComparison.OrdinalIgnoreCase)) { } //버퍼저장 종료
                     }
                 }
 
