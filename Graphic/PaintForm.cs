@@ -3,15 +3,19 @@ using System.Windows.Forms;
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
 using ZedGraph;
+using System.IO.Ports;
+using System.Threading;
+
 namespace Graphic
 {
+
     public partial class PaintForm : Form
     {
         ushort uigrp = 0;
         Matrix4 modelview, projection;
         ObjMesh mesh1 = null;
         const bool HighQuality = true;
-
+        private int command_bufsize = 0; 
         public PaintForm()
         {
 
@@ -28,8 +32,8 @@ namespace Graphic
 
         private void PaintForm_Load(object sender, EventArgs e)
         {
-
-
+            comboBox_port.DataSource = SerialPort.GetPortNames();
+            button_send.Enabled = false;
         }
 
         private void btnPaint_Click(object sender, EventArgs e)
@@ -217,7 +221,114 @@ namespace Graphic
 
         private void closeBtn_Click(object sender, EventArgs e)
         {
+            if (serialPort1.IsOpen)  //시리얼포트가 열려 있으면
+            {
+                serialPort1.Close();  //시리얼포트 닫기
+            }
             Application.Exit();
+        }
+
+        private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void btnSerial_Click(object sender, EventArgs e)
+        {
+            button_send.Enabled = true;
+            if (!serialPort1.IsOpen)  //시리얼포트가 열려 있지 않으면
+            {
+
+                serialPort1.PortName = comboBox_port.Text;
+                try
+                {
+                    serialPort1.Open();  //시리얼포트 열기
+                }
+                catch (Exception err)
+                {
+                    label_status.Text = err.Message;
+                    return;
+                }
+                label_status.Text = "포트가 열렸습니다.";
+                comboBox_port.Enabled = false;  //COM포트설정 콤보박스 비활성화
+            }
+            else  //시리얼포트가 열려 있으면
+            {
+                label_status.Text = "포트가 이미 열려 있습니다.";
+            }
+        }
+
+        private void serialPort1_DataReceived(object sender, SerialDataReceivedEventArgs e)
+        {
+            this.Invoke(new EventHandler(MySerialReceived));
+        }
+        private void MySerialReceived(object s, EventArgs e)  //여기에서 수신 데이타를 사용자의 용도에 따라 처리한다.
+        {
+            Thread term = new Thread(Terminal_thread);
+            term.Start();
+            
+        }
+        private void Button_send_Click(object sender, EventArgs e)  //보내기 버튼을 클릭하면
+        {
+            serialPort1.Write(textBox_send.Text);  //텍스트박스의 텍스트를 시리얼통신으로 송신
+        }
+
+        private void button_disconnect_Click_1(object sender, EventArgs e)
+        {
+            button_send.Enabled = false;
+            if (serialPort1.IsOpen)  //시리얼포트가 열려 있으면
+            {
+                serialPort1.Close();  //시리얼포트 닫기
+
+                label_status.Text = "포트가 닫혔습니다.";
+                comboBox_port.Enabled = true;  //COM포트설정 콤보박스 활성화
+            }
+            else  //시리얼포트가 닫혀 있으면
+            {
+                label_status.Text = "포트가 이미 닫혀 있습니다.";
+            }
+        }
+
+        private void Terminal_thread() //값이 음수면 안 됨. 수정하기
+        {
+            string ReceiveData = string.Empty;
+
+            if (command_bufsize < 16)
+            {
+                try
+                {
+                    ReceiveData = (string)serialPort1.ReadLine();  //시리얼 버터에 수신된 데이타를 ReceiveData 읽어오기
+                    if (richTextBox_received.InvokeRequired)
+                    {
+                        richTextBox_received.Invoke(new MethodInvoker(delegate { richTextBox_received.Text = richTextBox_received.Text + ReceiveData; }));
+                    }
+                    else richTextBox_received.Text = richTextBox_received.Text + ReceiveData;
+                }
+                catch (Exception err) { richTextBox_received.Invoke(new MethodInvoker(delegate { richTextBox_received.Text = err.Message; })); }
+
+                command_bufsize++;
+            }
+            else
+            {
+                try
+                {
+                    ReceiveData  = serialPort1.ReadLine();  //시리얼 버터에 수신된 데이타를 ReceiveData 읽어오기
+                    if (richTextBox_received.InvokeRequired)
+                    {
+                        richTextBox_received.Invoke(new MethodInvoker(delegate
+                        {
+                            int startIndex = richTextBox_received.GetFirstCharIndexFromLine(0);
+                            int endIndex = richTextBox_received.GetFirstCharIndexFromLine(1) - 1;
+                            richTextBox_received.Select(startIndex, endIndex - startIndex + 1);
+                            richTextBox_received.SelectedText = string.Empty;
+                            richTextBox_received.Invoke(new MethodInvoker(delegate { richTextBox_received.Text = richTextBox_received.Text + ReceiveData; }));
+                        }));
+                    }
+                    else richTextBox_received.Text = richTextBox_received.Text + ReceiveData;
+                    
+                }
+                catch (Exception err) { richTextBox_received.Invoke(new MethodInvoker(delegate { richTextBox_received.Text = err.Message; })); }
+            }
         }
     }
 }
