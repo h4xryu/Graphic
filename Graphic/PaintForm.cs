@@ -6,6 +6,10 @@ using ZedGraph;
 using System.IO.Ports;
 using System.Threading;
 using System.Runtime.Intrinsics.X86;
+using System.Collections;
+using System;
+using System.Collections.Generic;
+using System.Text;
 
 namespace Graphic
 {
@@ -21,6 +25,11 @@ namespace Graphic
         const bool HighQuality = true;
         private int command_bufsize = 0;
         private Thread term;
+        private Queue<int> q_acc = new Queue<int>();
+        private Queue<int> q_gyro = new Queue<int>();
+        private Queue<int> q_mag = new Queue<int>();
+        private Queue<int> q_ypr = new Queue<int>();
+
         public PaintForm()
         {
 
@@ -320,11 +329,33 @@ namespace Graphic
 
                     else if (cmdLine.StartsWith("acc : (", StringComparison.OrdinalIgnoreCase)) // acc 데이터 받는 부분
                     {
-                        //MessageBox.Show("test2"); //데이터 버퍼에 저장
+                        int idx = cmdLine.IndexOf('(');
+
+                        string[] values = cmdLine.Remove(0, idx + 1).Split(',');
+                        foreach(string val in values)
+                        {
+                            q_acc.Enqueue(int.Parse(val));
+                        }
+
+                        richTextBox_received.Invoke(new MethodInvoker(() => { richTextBox_received.AppendText(JoinQueueToString(q_acc)); }));
+                        if (cmdLine.EndsWith(")", StringComparison.OrdinalIgnoreCase)) { } //버퍼저장 종료
+
+                    }
+
+                    else if (cmdLine.StartsWith("gyro : (", StringComparison.OrdinalIgnoreCase)) // acc 데이터 받는 부분
+                    {
                         if (cmdLine.EndsWith(")", StringComparison.OrdinalIgnoreCase)) { } //버퍼저장 종료
                     }
 
-                    //. . .
+                    else if (cmdLine.StartsWith("mag : (", StringComparison.OrdinalIgnoreCase)) // acc 데이터 받는 부분
+                    {
+                        if (cmdLine.EndsWith(")", StringComparison.OrdinalIgnoreCase)) { } //버퍼저장 종료
+                    }
+
+                    else if (cmdLine.StartsWith("yaw, pitch, roll : (", StringComparison.OrdinalIgnoreCase)) // acc 데이터 받는 부분
+                    {
+                        if (cmdLine.EndsWith(")", StringComparison.OrdinalIgnoreCase)) { } //버퍼저장 종료
+                    }
 
                     else if (cmdLine.StartsWith("End of datas.", StringComparison.OrdinalIgnoreCase)) // acc 데이터 받는 부분
                     {
@@ -368,6 +399,27 @@ namespace Graphic
             
             }
             richTextBox_received.Invoke(new MethodInvoker(() => { richTextBox_received.ScrollToCaret(); }));
+        }
+        public static string JoinQueueToString(Queue<int> queue)
+        {
+            if (queue == null || queue.Count == 0)
+                return string.Empty;
+
+            StringBuilder sb = new StringBuilder();
+
+            foreach (int item in queue)
+            {
+                sb.Append(item.ToString());
+                sb.Append(", ");
+            }
+
+            // 마지막에 추가된 ", "를 제거
+            if (sb.Length > 0)
+            {
+                sb.Length -= 2;  // 마지막 ", " 두 문자를 제거
+            }
+
+            return sb.ToString();
         }
     }
 }
