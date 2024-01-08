@@ -5,6 +5,7 @@ using OpenTK.Graphics.OpenGL;
 using ZedGraph;
 using System.IO.Ports;
 using System.Threading;
+using System.Runtime.Intrinsics.X86;
 
 namespace Graphic
 {
@@ -289,45 +290,56 @@ namespace Graphic
             }
         }
 
-        private void Terminal_thread() //값이 음수면 안 됨. 수정하기
+        private void Terminal_thread() 
         {
-            string ReceiveData = string.Empty;
+            string ReceiveData = (string)serialPort1.ReadLine();  //시리얼 버터에 수신된 데이타를 ReceiveData 읽어오기
 
-            if (command_bufsize < 16)
+            if (ReceiveData.Equals("$", StringComparison.OrdinalIgnoreCase)) // 데이터 받는 부분
             {
-                try
+
+            }
+
+            try
+            {
+                if (command_bufsize < 16) // 터미널 박스 과부화 방지
                 {
-                    ReceiveData = (string)serialPort1.ReadLine();  //시리얼 버터에 수신된 데이타를 ReceiveData 읽어오기
+
                     if (richTextBox_received.InvokeRequired)
                     {
-                        richTextBox_received.Invoke(new MethodInvoker(delegate { richTextBox_received.Text = richTextBox_received.Text + ReceiveData; }));
+                        richTextBox_received.Invoke(new MethodInvoker(() => { richTextBox_received.Text = richTextBox_received.Text + ReceiveData; }));
                     }
                     else richTextBox_received.Text = richTextBox_received.Text + ReceiveData;
-                }
-                catch (Exception err) { richTextBox_received.Invoke(new MethodInvoker(delegate { richTextBox_received.Text = err.Message; })); }
 
-                command_bufsize++;
-            }
-            else
-            {
-                try
+
+                    command_bufsize++;
+                }
+                else
                 {
-                    ReceiveData  = serialPort1.ReadLine();  //시리얼 버터에 수신된 데이타를 ReceiveData 읽어오기
+
                     if (richTextBox_received.InvokeRequired)
                     {
-                        richTextBox_received.Invoke(new MethodInvoker(delegate
+                        richTextBox_received.Invoke(new MethodInvoker(() =>
                         {
                             int startIndex = richTextBox_received.GetFirstCharIndexFromLine(0);
                             int endIndex = richTextBox_received.GetFirstCharIndexFromLine(1) - 1;
                             richTextBox_received.Select(startIndex, endIndex - startIndex + 1);
                             richTextBox_received.SelectedText = string.Empty;
-                            richTextBox_received.Invoke(new MethodInvoker(delegate { richTextBox_received.Text = richTextBox_received.Text + ReceiveData; }));
+                            richTextBox_received.Invoke(new MethodInvoker(() => { richTextBox_received.Text = richTextBox_received.Text + ReceiveData; }));
                         }));
                     }
                     else richTextBox_received.Text = richTextBox_received.Text + ReceiveData;
-                    
                 }
-                catch (Exception err) { richTextBox_received.Invoke(new MethodInvoker(delegate { richTextBox_received.Text = err.Message; })); }
+
+                                     
+            }
+            catch (Exception err) { richTextBox_received.Invoke(new MethodInvoker(() => 
+            {
+
+                if (richTextBox_received.InvokeRequired)
+                {
+                    richTextBox_received.Text = err.Message;
+                }
+                else richTextBox_received.Text = richTextBox_received.Text + err.Message;}));
             }
         }
     }
