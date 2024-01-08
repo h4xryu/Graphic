@@ -25,7 +25,7 @@ namespace Graphic
         const bool HighQuality = true;
         private int command_bufsize = 0;
         private Thread term;
-        private Queue<int> q_acc = new Queue<int>();
+        private Queue<string> q_acc;
         private Queue<int> q_gyro = new Queue<int>();
         private Queue<int> q_mag = new Queue<int>();
         private Queue<int> q_ypr = new Queue<int>();
@@ -329,16 +329,22 @@ namespace Graphic
 
                     else if (cmdLine.StartsWith("acc : (", StringComparison.OrdinalIgnoreCase)) // acc 데이터 받는 부분
                     {
+                        Queue<string> q_acc = new Queue<string>();
                         int idx = cmdLine.IndexOf('(');
 
                         string[] values = cmdLine.Remove(0, idx + 1).Split(',');
                         foreach(string val in values)
                         {
-                            q_acc.Enqueue(int.Parse(val));
+                            if(val.EndsWith(")", StringComparison.OrdinalIgnoreCase))
+                            {
+                                //q_acc.Enqueue(val.Remove(val.Length-1));
+                            }
+                            q_acc.Enqueue(val);
+
                         }
 
                         richTextBox_received.Invoke(new MethodInvoker(() => { richTextBox_received.AppendText(JoinQueueToString(q_acc)); }));
-                        if (cmdLine.EndsWith(")", StringComparison.OrdinalIgnoreCase)) { } //버퍼저장 종료
+                        
 
                     }
 
@@ -359,7 +365,7 @@ namespace Graphic
 
                     else if (cmdLine.StartsWith("End of datas.", StringComparison.OrdinalIgnoreCase)) // acc 데이터 받는 부분
                     {
-                        serialPort1.Write("^"); //흐름제어
+                        //serialPort1.Write("^"); //흐름제어
                        
                     }
                 }
@@ -400,14 +406,14 @@ namespace Graphic
             }
             richTextBox_received.Invoke(new MethodInvoker(() => { richTextBox_received.ScrollToCaret(); }));
         }
-        public static string JoinQueueToString(Queue<int> queue)
+        public static string JoinQueueToString(Queue<string> queue)
         {
             if (queue == null || queue.Count == 0)
                 return string.Empty;
 
             StringBuilder sb = new StringBuilder();
 
-            foreach (int item in queue)
+            foreach (string item in queue)
             {
                 sb.Append(item.ToString());
                 sb.Append(", ");
