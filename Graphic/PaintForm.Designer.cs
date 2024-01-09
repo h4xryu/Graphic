@@ -2,6 +2,7 @@
 using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL;
 using System.IO.Ports;
+using System.Windows.Forms;
 using ZedGraph;
 
 namespace Graphic
@@ -35,7 +36,7 @@ namespace Graphic
         private void InitializeComponent()
         {
             components = new System.ComponentModel.Container();
-            System.Text.ASCIIEncoding asciiEncodingSealed1 = new System.Text.ASCIIEncoding();
+            System.Text.ASCIIEncoding asciiEncoding1 = new System.Text.ASCIIEncoding();
             System.Text.DecoderReplacementFallback decoderReplacementFallback1 = new System.Text.DecoderReplacementFallback();
             System.Text.EncoderReplacementFallback encoderReplacementFallback1 = new System.Text.EncoderReplacementFallback();
             glControl1 = new GLControl();
@@ -49,6 +50,10 @@ namespace Graphic
             textBox_send = new TextBox();
             button_send = new Button();
             button_disconnect = new Button();
+            statusStrip1 = new StatusStrip();
+            toolStripStatusLabel1 = new ToolStripStatusLabel();
+            myTimer = new System.Windows.Forms.Timer();
+            statusStrip1.SuspendLayout();
             SuspendLayout();
             // 
             // glControl1
@@ -70,7 +75,7 @@ namespace Graphic
             // 
             closeBtn.BackColor = Color.FromArgb(15, 30, 45);
             closeBtn.FlatStyle = FlatStyle.Popup;
-            closeBtn.Location = new Point(1358, 750);
+            closeBtn.Location = new Point(1358, 739);
             closeBtn.Margin = new Padding(0);
             closeBtn.Name = "closeBtn";
             closeBtn.Size = new Size(88, 23);
@@ -128,18 +133,19 @@ namespace Graphic
             serialPort1.DataBits = 8;
             serialPort1.DiscardNull = false;
             serialPort1.DtrEnable = false;
-            serialPort1.Encoding = asciiEncodingSealed1;
+
+            serialPort1.Encoding = asciiEncoding1;
             serialPort1.Handshake = Handshake.None;
             serialPort1.NewLine = "\n";
             serialPort1.Parity = Parity.None;
             serialPort1.ParityReplace = 63;
-            serialPort1.PortName = "COM1";
-            serialPort1.ReadBufferSize = 4096;
+            serialPort1.PortName = "COM3";
+            serialPort1.ReadBufferSize = 2048;
             serialPort1.ReadTimeout = -1;
             serialPort1.ReceivedBytesThreshold = 1;
             serialPort1.RtsEnable = false;
             serialPort1.StopBits = StopBits.One;
-            serialPort1.WriteBufferSize = 2048;
+            serialPort1.WriteBufferSize = 1024;
             serialPort1.WriteTimeout = -1;
             serialPort1.DataReceived += serialPort1_DataReceived;
             // 
@@ -164,6 +170,7 @@ namespace Graphic
             richTextBox_received.Size = new Size(695, 310);
             richTextBox_received.TabIndex = 7;
             richTextBox_received.Text = "";
+            richTextBox_received.TextChanged += richTextBox_received_TextChanged;
             // 
             // textBox_send
             // 
@@ -199,6 +206,22 @@ namespace Graphic
             button_disconnect.UseVisualStyleBackColor = true;
             button_disconnect.Click += button_disconnect_Click_1;
             // 
+            // statusStrip1
+            // 
+            statusStrip1.ImageScalingSize = new Size(20, 20);
+            statusStrip1.Items.AddRange(new ToolStripItem[] { toolStripStatusLabel1 });
+            statusStrip1.Location = new Point(0, 774);
+            statusStrip1.Name = "statusStrip1";
+            statusStrip1.RenderMode = ToolStripRenderMode.ManagerRenderMode;
+            statusStrip1.Size = new Size(1493, 22);
+            statusStrip1.TabIndex = 0;
+            statusStrip1.Text = "statusStrip";
+            // 
+            // toolStripStatusLabel1
+            // 
+            toolStripStatusLabel1.Name = "toolStripStatusLabel1";
+            toolStripStatusLabel1.Size = new Size(0, 17);
+            // 
             // PaintForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
@@ -216,6 +239,7 @@ namespace Graphic
             Controls.Add(glControl1);
             Controls.Add(zedGraphControl1);
             Controls.Add(closeBtn);
+            Controls.Add(statusStrip1);
             FormBorderStyle = FormBorderStyle.None;
             Location = new Point(200, 100);
             Margin = new Padding(2);
@@ -223,8 +247,14 @@ namespace Graphic
             StartPosition = FormStartPosition.Manual;
             Text = "PaintForm";
             Load += PaintForm_Load;
+            statusStrip1.ResumeLayout(false);
+            statusStrip1.PerformLayout();
             ResumeLayout(false);
             PerformLayout();
+            //
+            // myTimer
+            //
+
         }
 
         #endregion
@@ -239,5 +269,8 @@ namespace Graphic
         private TextBox textBox_send;
         private Button button_send;
         private Button button_disconnect;
+        private StatusStrip statusStrip1;
+        private ToolStripStatusLabel toolStripStatusLabel1;
+        private System.Windows.Forms.Timer myTimer;
     }
 }

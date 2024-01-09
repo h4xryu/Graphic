@@ -10,6 +10,8 @@ using System.Collections;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement;
+
 
 namespace Graphic
 {
@@ -25,10 +27,11 @@ namespace Graphic
         const bool HighQuality = true;
         private int command_bufsize = 0;
         private Thread term;
-        private Queue<string> q_acc;
-        private Queue<int> q_gyro = new Queue<int>();
-        private Queue<int> q_mag = new Queue<int>();
-        private Queue<int> q_ypr = new Queue<int>();
+        private List<string?> acc;
+        private List<char?> gyro= new List<char?>();
+        private List<string?> mag;
+        private List<string?> ypr;
+        
 
         public PaintForm()
         {
@@ -258,7 +261,7 @@ namespace Graphic
                 try
                 {
                     serialPort1.Open();  //시리얼포트 열기
-                    
+                    richTextBox_received.Text = string.Empty;
                     
                 }
                 catch (Exception err)
@@ -278,12 +281,40 @@ namespace Graphic
         private void serialPort1_DataReceived(object sender, SerialDataReceivedEventArgs e)
         {
             this.Invoke(new EventHandler(MySerialReceived));
+            
         }
-        private void MySerialReceived(object s, EventArgs e)  //여기에서 수신 데이타를 사용자의 용도에 따라 처리한다.
+        private void MySerialReceived(object? s, EventArgs e)  //여기에서 수신 데이타를 사용자의 용도에 따라 처리한다.
         {
+
             term = new Thread(Terminal_thread);
-            term.Start();
             term.IsBackground = true;
+
+            if (term.ThreadState != ThreadState.Running)
+            {
+                term.Start();
+            }
+            //term.Start(acc);
+            
+            //term.Start(mag);
+            //term.Start(ypr);
+            
+
+            try
+            {
+                if (gyro != null && gyro.Count > 0)
+                {
+                    this.Invoke(() => {
+                        toolStripStatusLabel1.Text = angleX.ToString() + " " + angleY.ToString();
+                        glControl1.Invalidate();
+                        gyro.Clear();
+                        
+                    });
+
+                }
+            }
+            catch (Exception err) { }
+
+
         }
         private void Button_send_Click(object sender, EventArgs e)  //보내기 버튼을 클릭하면
         {
@@ -293,6 +324,8 @@ namespace Graphic
 
         private void button_disconnect_Click_1(object sender, EventArgs e)
         {
+            angleX = 0;
+            angleY = 0;
             button_send.Enabled = false;
             if (serialPort1.IsOpen)  //시리얼포트가 열려 있으면
             {
@@ -310,62 +343,108 @@ namespace Graphic
 
         private void Terminal_thread()
         {
+            
+            List<string?> acc;
+
+            List<string?> mag;
+            List<string?> ypr;
+            float result;
             string? ReceiveData = string.Empty;
+
+
+            while (true) { 
+
             try 
             { 
-                ReceiveData = (string)serialPort1.ReadLine();//시리얼 버터에 수신된 데이타를 ReceiveData 읽어오기
-                string[] lines = ReceiveData.Split(new string[] { "\n\r", "\r", "\n" }, StringSplitOptions.None);
+                ReceiveData = (string)serialPort1.ReadLine();//시리얼 포트에 수신된 데이타를 ReceiveData 읽어오기
+
+                if(ReceiveData == null) 
+                {
+                    return;
+                }
+
+                string[] lines = ReceiveData.Split(new string[] { "\n\r", "\r", "\n", "|" }, StringSplitOptions.None);
+
+                
 
                 foreach (string cmdLine in lines)
                 {
-                    if (cmdLine.Equals("Waiting for starting...", StringComparison.OrdinalIgnoreCase)) // 데이터 시작 부분
+                    if (cmdLine.Equals("\nWaiting for Starting...", StringComparison.OrdinalIgnoreCase)) // 데이터 시작 부분
                     {
                         serialPort1.Write("$");
-                    }
-                    else if (cmdLine.Equals("Data Received", StringComparison.OrdinalIgnoreCase)) // 데이터 시작 부분
-                    {
-                        //MessageBox.Show("test1");
+                        return;
                     }
 
                     else if (cmdLine.StartsWith("acc : (", StringComparison.OrdinalIgnoreCase)) // acc 데이터 받는 부분
                     {
-                        Queue<string> q_acc = new Queue<string>();
+                        acc = new List<string?>();
                         int idx = cmdLine.IndexOf('(');
-
                         string[] values = cmdLine.Remove(0, idx + 1).Split(',');
-                        foreach(string val in values)
+                        
+                        for (int i = 0; i < values.Length; i++)
                         {
-                            if(val.EndsWith(")", StringComparison.OrdinalIgnoreCase))
-                            {
-                                //q_acc.Enqueue(val.Remove(val.Length-1));
-                            }
-                            q_acc.Enqueue(val);
-
+                            acc.Add(values[i].Substring(0, values[i].Length - 2));
                         }
 
-                        richTextBox_received.Invoke(new MethodInvoker(() => { richTextBox_received.AppendText(JoinQueueToString(q_acc)); }));
+                    }
+
+                    else if (cmdLine.StartsWith("{", StringComparison.OrdinalIgnoreCase)) // gyro 데이터 받는 부분
+                    {
+                        //gyro = new List<string?>();
+                        int idx = cmdLine.IndexOf('{');
+                        string[] values = cmdLine.Remove(0, idx + 1).Split('~');
+                        for (int i = 0; i < values.Length; i++)
+                        {
+                            if (values[i].Length > 1) this.Invoke(() => { gyro.Add(values[i][0]); });
+                        }
+                        this.Invoke(() => {
+                            if (values.Length > 1)
+                            {
+                                try
+                                {
+                                    angleY += ((float)(values[0][0] - 79.5)) / 5;
+                                    angleX += -((float)(values[1][0] - 79.5)) / 5;
+                                    
+                                }
+                                catch (IndexOutOfRangeException e)
+                                { }
+                            }
+                            
+                        });
                         
-
+                        
                     }
 
-                    else if (cmdLine.StartsWith("gyro : (", StringComparison.OrdinalIgnoreCase)) // acc 데이터 받는 부분
+                    else if (cmdLine.StartsWith("mag : (", StringComparison.OrdinalIgnoreCase)) // mag 데이터 받는 부분
                     {
-                        if (cmdLine.EndsWith(")", StringComparison.OrdinalIgnoreCase)) { } //버퍼저장 종료
+                        mag = new List<string?>();
+                        int idx = cmdLine.IndexOf('(');
+                        string[] values = cmdLine.Remove(0, idx + 1).Split(',');
+
+                        for (int i = 0; i < values.Length; i++)
+                        {
+                            mag.Add(values[i].Substring(0, values[i].Length - 2));
+                        }
+                       
                     }
 
-                    else if (cmdLine.StartsWith("mag : (", StringComparison.OrdinalIgnoreCase)) // acc 데이터 받는 부분
+                    else if (cmdLine.StartsWith("yaw, pitch, roll : (", StringComparison.OrdinalIgnoreCase)) // ypr 데이터 받는 부분
                     {
-                        if (cmdLine.EndsWith(")", StringComparison.OrdinalIgnoreCase)) { } //버퍼저장 종료
+                        ypr = new List<string?>();
+                        int idx = cmdLine.IndexOf('(');
+                        string[] values = cmdLine.Remove(0, idx + 1).Split(',');
+
+                        for (int i = 0; i < values.Length; i++)
+                        {
+                            ypr.Add(values[i].Substring(0, values[i].Length - 2));
+                        }
+                        
                     }
 
-                    else if (cmdLine.StartsWith("yaw, pitch, roll : (", StringComparison.OrdinalIgnoreCase)) // acc 데이터 받는 부분
+                    else if (cmdLine.StartsWith("!!", StringComparison.OrdinalIgnoreCase)) // acc 데이터 받는 부분
                     {
-                        if (cmdLine.EndsWith(")", StringComparison.OrdinalIgnoreCase)) { } //버퍼저장 종료
-                    }
-
-                    else if (cmdLine.StartsWith("End of datas.", StringComparison.OrdinalIgnoreCase)) // acc 데이터 받는 부분
-                    {
-                        //serialPort1.Write("^"); //흐름제어
+                        serialPort1.Write("^"); //흐름제어
+                        return;
                        
                     }
                 }
@@ -374,58 +453,57 @@ namespace Graphic
             catch (Exception err)
             {
             }
-
-            if (command_bufsize < 1024) // 터미널 박스 과부화 방지
-            {
-
-                if (richTextBox_received.InvokeRequired) richTextBox_received.Invoke(new MethodInvoker(() => { richTextBox_received.AppendText(ReceiveData); }));
-                else richTextBox_received.AppendText(ReceiveData);
+            if (richTextBox_received.InvokeRequired) richTextBox_received.Invoke(new MethodInvoker(() => { richTextBox_received.AppendText(ReceiveData); }));
+            else richTextBox_received.AppendText(ReceiveData);
 
 
-                command_bufsize++;
-            }
-            else
-            {
-
-                if (richTextBox_received.InvokeRequired)
+            command_bufsize++;
+            return;
+                if (command_bufsize < 256) // 터미널 박스 과부화 방지
                 {
-                    richTextBox_received.Invoke(new MethodInvoker(() =>
-                    {
-                        int startIndex = richTextBox_received.GetFirstCharIndexFromLine(0);
-                        int endIndex = richTextBox_received.GetFirstCharIndexFromLine(1) - 1;
-                        if (endIndex - startIndex + 1 > 1024)
-                        {
-                            richTextBox_received.Select(startIndex, endIndex - startIndex + 1);
-                            richTextBox_received.SelectedText = string.Empty;
-                        }
-                        richTextBox_received.Invoke(new MethodInvoker(() => { richTextBox_received.AppendText(ReceiveData); }));
-                    }));
+
+                    if (richTextBox_received.InvokeRequired) richTextBox_received.Invoke(new MethodInvoker(() => { richTextBox_received.AppendText(ReceiveData); }));
+                    else richTextBox_received.AppendText(ReceiveData);
+
+
+                    command_bufsize++;
+                    return;
                 }
-                else  richTextBox_received.AppendText(ReceiveData); 
+                else
+                {
+                    command_bufsize = 0;
+                    serialPort1.DiscardInBuffer();
+                    serialPort1.DiscardOutBuffer();
+
+                    if (richTextBox_received.InvokeRequired)
+                    {
+                        richTextBox_received.Invoke(new MethodInvoker(() =>
+                        {
+                            int startIndex = richTextBox_received.GetFirstCharIndexFromLine(0);
+                            int endIndex = richTextBox_received.GetFirstCharIndexFromLine(1) - 1;
+                            if (endIndex - startIndex + 1 > 1024)
+                            {
+                                richTextBox_received.Select(startIndex, endIndex - startIndex + 1);
+                                richTextBox_received.SelectedText = string.Empty;
+                            }
+                            richTextBox_received.Invoke(new MethodInvoker(() => { richTextBox_received.AppendText(ReceiveData); }));
+
+                        }));
+                    }
+                    else richTextBox_received.AppendText(ReceiveData);
+                    return;
+                }
+            }
             
-            }
-            richTextBox_received.Invoke(new MethodInvoker(() => { richTextBox_received.ScrollToCaret(); }));
         }
-        public static string JoinQueueToString(Queue<string> queue)
+
+        private void richTextBox_received_TextChanged(object sender, EventArgs e)
         {
-            if (queue == null || queue.Count == 0)
-                return string.Empty;
+            richTextBox_received.SelectionStart = richTextBox_received.TextLength;
+            richTextBox_received.ScrollToCaret();
+            
 
-            StringBuilder sb = new StringBuilder();
-
-            foreach (string item in queue)
-            {
-                sb.Append(item.ToString());
-                sb.Append(", ");
-            }
-
-            // 마지막에 추가된 ", "를 제거
-            if (sb.Length > 0)
-            {
-                sb.Length -= 2;  // 마지막 ", " 두 문자를 제거
-            }
-
-            return sb.ToString();
         }
+
     }
 }
