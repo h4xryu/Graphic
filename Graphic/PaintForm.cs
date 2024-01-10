@@ -12,7 +12,6 @@ using System.Collections.Generic;
 using System.Text;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
-
 namespace Graphic
 {
 
@@ -28,10 +27,17 @@ namespace Graphic
         private int command_bufsize = 0;
         private Thread term;
         private List<string?> acc;
-        private List<char?> gyro= new List<char?>();
+        private List<string?> gyro= new List<string?>();
         private List<string?> mag;
         private List<string?> ypr;
-        
+        private double old_angleX = 0;
+        private double old_angleY = 0;
+        private double res = 360;
+        private double diffX = 0;
+        private double diffY = 0;
+        private string[] values;
+        private bool ang_flag = false;
+        private SWSleep utimer;
 
         public PaintForm()
         {
@@ -63,10 +69,7 @@ namespace Graphic
         private void SetupViewport()
         {
             if (this.WindowState == FormWindowState.Minimized) return;
-            //glControl1.Width = this.Width - 64;
-            //glControl1.Height = this.Height - 128;
             GL.MatrixMode(MatrixMode.Projection);
-            //GL.LoadIdentity();
             GL.Ortho(0, glControl1.Width, 0, glControl1.Height, -1, 1);
             GL.Viewport(0, 0, glControl1.Width, glControl1.Height);
             GL.Enable(EnableCap.DepthTest);
@@ -146,20 +149,16 @@ namespace Graphic
         #region GLControl. Mouse event handlers
         private int _mouseStartX = 0;
         private int _mouseStartY = 0;
-        private float angleX = 0;
-        private float angleY = 0;
-        private float angleZ = 0;
+        private double angleX = 0;
+        private double angleY = 0;
+        private double angleZ = 0;
         private float panX = 0;
         private float panY = 0;
-        private int job = 0;
-        private int left_flag = 0;
-        private int right_flag = 0;
 
         private void glControl_MouseMove(object sender, MouseEventArgs e)
         {
             if (e.Button == MouseButtons.Right)
             {
-                right_flag = 1;
                 angleX -= (e.X - _mouseStartX);
                 angleY -= (e.Y - _mouseStartY);
 
@@ -170,14 +169,6 @@ namespace Graphic
             if (e.Button == MouseButtons.Left)
             {
 
-                left_flag = 1;
-                //panX += (e.X - _mouseStartX);
-                //panY -= (e.Y - _mouseStartY);
-                //GL.Viewport((int)panX, (int)panY, glControl1.Width, glControl1.Height); // Use all of the glControl painting area
-                //this.Cursor = Cursors.Hand;
-
-
-                // angleY -= (e.Y - _mouseStartY);
 
                 angleZ += (e.X - _mouseStartX);
 
@@ -202,13 +193,11 @@ namespace Graphic
 
         private void glControl1_MouseUp(object sender, MouseEventArgs e)
         {
-            left_flag = 0;
-            right_flag = 0;
+
             this.Cursor = Cursors.Default;
             angleX = 0.0f;
             angleY = 0.0f;
             angleZ = 0.0f;
-            job = 0;
             GL.LoadIdentity();
             glControl1.Invalidate();
 
@@ -289,31 +278,70 @@ namespace Graphic
             term = new Thread(Terminal_thread);
             term.IsBackground = true;
 
+            
+
+
             if (term.ThreadState != ThreadState.Running)
             {
                 term.Start();
             }
-            //term.Start(acc);
-            
-            //term.Start(mag);
-            //term.Start(ypr);
+
+            if (!ang_flag)
+            {
+                serialPort1.DiscardInBuffer();
+                serialPort1.DiscardOutBuffer();
+                return;
+            }
+
+
             
 
+            /*
             try
             {
-                if (gyro != null && gyro.Count > 0)
+                ang_flag = false;
+                if ((old_angleX > angleX) && old_angleY > angleY)
                 {
-                    this.Invoke(() => {
-                        toolStripStatusLabel1.Text = angleX.ToString() + " " + angleY.ToString();
-                        glControl1.Invalidate();
-                        gyro.Clear();
-                        
-                    });
+                    diffX = (old_angleX - angleX) / res;
+                    diffY = (old_angleY - angleY) / res;
 
+                    for (int i = 0; i < res; i++) 
+                    {
+                        angleX += diffX;
+                        angleY += diffY;
+                        glControl1.Invalidate();
+                    }
+
+                    old_angleX = angleX;
+                    old_angleY = angleY;
                 }
+                else if ((old_angleX < angleX) && old_angleY < angleY)
+                {
+                    diffX = (angleX - old_angleX) / res;
+                    diffY = (angleY - old_angleY) / res;
+
+                    for (int i = 0; i < res; i++)
+                    {
+                        angleX -= diffX;
+                        angleY -= diffY;
+                        glControl1.Invalidate();
+                    }
+
+                    old_angleX = angleX;
+                    old_angleY = angleY;
+                }
+                else
+                {
+                    
+                }
+            
+                
+
             }
             catch (Exception err) { }
-
+            */
+            serialPort1.DiscardInBuffer();
+            serialPort1.DiscardOutBuffer();
 
         }
         private void Button_send_Click(object sender, EventArgs e)  //보내기 버튼을 클릭하면
@@ -344,109 +372,119 @@ namespace Graphic
         private void Terminal_thread()
         {
             
-            List<string?> acc;
-
-            List<string?> mag;
-            List<string?> ypr;
-            float result;
+ 
+            
             string? ReceiveData = string.Empty;
 
 
-            while (true) { 
 
             try 
-            { 
+            {
                 ReceiveData = (string)serialPort1.ReadLine();//시리얼 포트에 수신된 데이타를 ReceiveData 읽어오기
 
-                if(ReceiveData == null) 
+                if(ReceiveData == string.Empty) 
                 {
                     return;
                 }
 
-                string[] lines = ReceiveData.Split(new string[] { "\n\r", "\r", "\n", "|" }, StringSplitOptions.None);
+                string[] lines = ReceiveData.Split(new string[] { "\n\r" , "\n", "\r"}, StringSplitOptions.RemoveEmptyEntries);
 
                 
 
                 foreach (string cmdLine in lines)
                 {
-                    if (cmdLine.Equals("\nWaiting for Starting...", StringComparison.OrdinalIgnoreCase)) // 데이터 시작 부분
-                    {
-                        serialPort1.Write("$");
-                        return;
-                    }
-
-                    else if (cmdLine.StartsWith("acc : (", StringComparison.OrdinalIgnoreCase)) // acc 데이터 받는 부분
-                    {
-                        acc = new List<string?>();
-                        int idx = cmdLine.IndexOf('(');
-                        string[] values = cmdLine.Remove(0, idx + 1).Split(',');
-                        
-                        for (int i = 0; i < values.Length; i++)
+                        if (cmdLine.Equals("Waiting for Starting...", StringComparison.OrdinalIgnoreCase)) // 데이터 시작 부분
                         {
-                            acc.Add(values[i].Substring(0, values[i].Length - 2));
+                            serialPort1.Write("$");
+                            return;
                         }
 
-                    }
 
-                    else if (cmdLine.StartsWith("{", StringComparison.OrdinalIgnoreCase)) // gyro 데이터 받는 부분
-                    {
-                        //gyro = new List<string?>();
-                        int idx = cmdLine.IndexOf('{');
-                        string[] values = cmdLine.Remove(0, idx + 1).Split('~');
-                        for (int i = 0; i < values.Length; i++)
+                        else if ((cmdLine.StartsWith("{", StringComparison.OrdinalIgnoreCase)) && cmdLine.EndsWith("}", StringComparison.OrdinalIgnoreCase)) // gyro 데이터 받는 부분
                         {
-                            if (values[i].Length > 1) this.Invoke(() => { gyro.Add(values[i][0]); });
-                        }
-                        this.Invoke(() => {
-                            if (values.Length > 1)
+                            int idx_start = cmdLine.IndexOf('{');
+                            int idx_end = cmdLine.IndexOf('}');
+                           
+
+
+
+                            this.Invoke(() =>
                             {
+                               
+                                values = cmdLine.Remove(0, idx_start + 1).Remove(idx_end - 1, 1).Split('~');
+
                                 try
                                 {
-                                    angleY += ((float)(values[0][0] - 79.5)) / 5;
-                                    angleX += -((float)(values[1][0] - 79.5)) / 5;
-                                    
+                                    utimer = new SWSleep();
+                                    double tmpX = -((double.Parse(values[0]))/1.11);
+                                    double tmpY = -((double.Parse(values[1])));
+
+
+                                    if ((old_angleX != tmpX) || old_angleY != tmpY)
+                                    {
+                                        if (Math.Abs(old_angleX - tmpX) > 3) diffX = Math.Abs((old_angleX - tmpX) / res);
+                                        else { diffX = 0; }
+                                        if (Math.Abs(old_angleY - tmpY) > 3) diffY = Math.Abs((old_angleY - tmpY) / res);
+                                        else 
+                                        { 
+                                            diffY = 0;
+                                            if(diffX == 0) return; 
+                                        } 
+
+                                        for (int i = 0; i < res; i++)
+                                        {
+                                            if (tmpX > old_angleX)
+                                            {
+                                                old_angleX += diffX;
+                                                angleX = old_angleX;
+                                                glControl1.Invalidate();
+                                                utimer.USleep(5);
+                                            }
+                                            else
+                                            {
+                                                old_angleX -= diffX;
+                                                angleX = old_angleX;
+                                                glControl1.Invalidate();
+                                                utimer.USleep(5);
+                                            }
+                                            
+                                            if (tmpY > old_angleY)
+                                            {
+                                                old_angleY += diffY;
+                                                angleY = old_angleY;
+                                                glControl1.Invalidate();
+                                                utimer.USleep(5);
+                                            }
+                                            else
+                                            {
+                                                old_angleY -= diffY;
+                                                angleY = old_angleY;
+                                                glControl1.Invalidate();
+                                                utimer.USleep(5);
+                                            }
+                                            toolStripStatusLabel1.Text = angleX.ToString() + " " + angleY.ToString() + " diff X " + diffX + " Y " + diffY + " res : " + res;
+                                            utimer.USleep(10);
+
+                                        }
+
+                                        old_angleX = tmpX;
+                                        old_angleY = tmpY;
+                                    }
+
+                                   
+                                    //glControl1.Invalidate();
+
                                 }
                                 catch (IndexOutOfRangeException e)
                                 { }
-                            }
-                            
-                        });
-                        
-                        
-                    }
+                                catch (Exception e) { }
 
-                    else if (cmdLine.StartsWith("mag : (", StringComparison.OrdinalIgnoreCase)) // mag 데이터 받는 부분
-                    {
-                        mag = new List<string?>();
-                        int idx = cmdLine.IndexOf('(');
-                        string[] values = cmdLine.Remove(0, idx + 1).Split(',');
+                            });
+                        
 
-                        for (int i = 0; i < values.Length; i++)
-                        {
-                            mag.Add(values[i].Substring(0, values[i].Length - 2));
                         }
-                       
-                    }
 
-                    else if (cmdLine.StartsWith("yaw, pitch, roll : (", StringComparison.OrdinalIgnoreCase)) // ypr 데이터 받는 부분
-                    {
-                        ypr = new List<string?>();
-                        int idx = cmdLine.IndexOf('(');
-                        string[] values = cmdLine.Remove(0, idx + 1).Split(',');
 
-                        for (int i = 0; i < values.Length; i++)
-                        {
-                            ypr.Add(values[i].Substring(0, values[i].Length - 2));
-                        }
-                        
-                    }
-
-                    else if (cmdLine.StartsWith("!!", StringComparison.OrdinalIgnoreCase)) // acc 데이터 받는 부분
-                    {
-                        serialPort1.Write("^"); //흐름제어
-                        return;
-                       
-                    }
                 }
 
             }  
@@ -457,43 +495,9 @@ namespace Graphic
             else richTextBox_received.AppendText(ReceiveData);
 
 
-            command_bufsize++;
-            return;
-                if (command_bufsize < 256) // 터미널 박스 과부화 방지
-                {
-
-                    if (richTextBox_received.InvokeRequired) richTextBox_received.Invoke(new MethodInvoker(() => { richTextBox_received.AppendText(ReceiveData); }));
-                    else richTextBox_received.AppendText(ReceiveData);
-
-
-                    command_bufsize++;
-                    return;
-                }
-                else
-                {
-                    command_bufsize = 0;
-                    serialPort1.DiscardInBuffer();
-                    serialPort1.DiscardOutBuffer();
-
-                    if (richTextBox_received.InvokeRequired)
-                    {
-                        richTextBox_received.Invoke(new MethodInvoker(() =>
-                        {
-                            int startIndex = richTextBox_received.GetFirstCharIndexFromLine(0);
-                            int endIndex = richTextBox_received.GetFirstCharIndexFromLine(1) - 1;
-                            if (endIndex - startIndex + 1 > 1024)
-                            {
-                                richTextBox_received.Select(startIndex, endIndex - startIndex + 1);
-                                richTextBox_received.SelectedText = string.Empty;
-                            }
-                            richTextBox_received.Invoke(new MethodInvoker(() => { richTextBox_received.AppendText(ReceiveData); }));
-
-                        }));
-                    }
-                    else richTextBox_received.AppendText(ReceiveData);
-                    return;
-                }
-            }
+            
+               
+            
             
         }
 

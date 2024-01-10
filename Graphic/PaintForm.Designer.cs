@@ -141,13 +141,13 @@ namespace Graphic
             serialPort1.ParityReplace = 63;
             serialPort1.PortName = "COM3";
             serialPort1.ReadBufferSize = 2048;
-            serialPort1.ReadTimeout = -1;
+            serialPort1.ReadTimeout = 500;
             serialPort1.ReceivedBytesThreshold = 1;
             serialPort1.RtsEnable = false;
             serialPort1.StopBits = StopBits.One;
             serialPort1.WriteBufferSize = 1024;
-            serialPort1.WriteTimeout = -1;
-            serialPort1.DataReceived += serialPort1_DataReceived;
+            serialPort1.WriteTimeout = 500;
+            serialPort1.DataReceived += new SerialDataReceivedEventHandler(serialPort1_DataReceived);
             // 
             // label_status
             // 
