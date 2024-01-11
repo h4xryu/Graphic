@@ -30,11 +30,11 @@ namespace Graphic
         private List<string?> gyro= new List<string?>();
         private List<string?> mag;
         private List<string?> ypr;
-        private double old_angleX = 0;
-        private double old_angleY = 0;
-        private double res = 360;
-        private double diffX = 0;
-        private double diffY = 0;
+        private float old_angleX = 0;
+        private float old_angleY = 0;
+        private float res = 180;
+        private float diffX = 0;
+        private float diffY = 0;
         private string[] values;
         private bool ang_flag = false;
         private SWSleep utimer;
@@ -56,7 +56,7 @@ namespace Graphic
         private void PaintForm_Load(object sender, EventArgs e)
         {
             comboBox_port.DataSource = SerialPort.GetPortNames();
-            button_send.Enabled = false;
+            //button_send.Enabled = false;
         }
 
         private void btnPaint_Click(object sender, EventArgs e)
@@ -149,9 +149,9 @@ namespace Graphic
         #region GLControl. Mouse event handlers
         private int _mouseStartX = 0;
         private int _mouseStartY = 0;
-        private double angleX = 0;
-        private double angleY = 0;
-        private double angleZ = 0;
+        private float angleX = 0;
+        private float angleY = 0;
+        private float angleZ = 0;
         private float panX = 0;
         private float panY = 0;
 
@@ -241,7 +241,7 @@ namespace Graphic
 
         private void btnSerial_Click(object sender, EventArgs e)
         {
-            button_send.Enabled = true;
+            //button_send.Enabled = true;
 
             if (!serialPort1.IsOpen)  //시리얼포트가 열려 있지 않으면
             {
@@ -283,78 +283,25 @@ namespace Graphic
 
             if (term.ThreadState != ThreadState.Running)
             {
-                term.Start();
-            }
-
-            if (!ang_flag)
-            {
-                serialPort1.DiscardInBuffer();
-                serialPort1.DiscardOutBuffer();
-                return;
+               term.Start();
             }
 
 
-            
-
-            /*
-            try
-            {
-                ang_flag = false;
-                if ((old_angleX > angleX) && old_angleY > angleY)
-                {
-                    diffX = (old_angleX - angleX) / res;
-                    diffY = (old_angleY - angleY) / res;
-
-                    for (int i = 0; i < res; i++) 
-                    {
-                        angleX += diffX;
-                        angleY += diffY;
-                        glControl1.Invalidate();
-                    }
-
-                    old_angleX = angleX;
-                    old_angleY = angleY;
-                }
-                else if ((old_angleX < angleX) && old_angleY < angleY)
-                {
-                    diffX = (angleX - old_angleX) / res;
-                    diffY = (angleY - old_angleY) / res;
-
-                    for (int i = 0; i < res; i++)
-                    {
-                        angleX -= diffX;
-                        angleY -= diffY;
-                        glControl1.Invalidate();
-                    }
-
-                    old_angleX = angleX;
-                    old_angleY = angleY;
-                }
-                else
-                {
-                    
-                }
-            
-                
-
-            }
-            catch (Exception err) { }
-            */
             serialPort1.DiscardInBuffer();
             serialPort1.DiscardOutBuffer();
 
         }
         private void Button_send_Click(object sender, EventArgs e)  //보내기 버튼을 클릭하면
         {
-            serialPort1.Write(textBox_send.Text);  //텍스트박스의 텍스트를 시리얼통신으로 송신
-            textBox_send.Text = string.Empty;
+           // serialPort1.Write(textBox_send.Text);  //텍스트박스의 텍스트를 시리얼통신으로 송신
+            //textBox_send.Text = string.Empty;
         }
 
         private void button_disconnect_Click_1(object sender, EventArgs e)
         {
             angleX = 0;
             angleY = 0;
-            button_send.Enabled = false;
+           // button_send.Enabled = false;
             if (serialPort1.IsOpen)  //시리얼포트가 열려 있으면
             {
                 command_bufsize = 0;
@@ -371,134 +318,146 @@ namespace Graphic
 
         private void Terminal_thread()
         {
-            
- 
-            
+
+            utimer = new SWSleep();
+
+
             string? ReceiveData = string.Empty;
 
 
 
-            try 
+            try
             {
-                ReceiveData = (string)serialPort1.ReadLine();//시리얼 포트에 수신된 데이타를 ReceiveData 읽어오기
-
-                if(ReceiveData == string.Empty) 
+                ReceiveData = (string)serialPort1.ReadLine(); //시리얼 포트에 수신된 데이타를 ReceiveData 읽어오기
+                if (ReceiveData == string.Empty)
+                {
+                    if (richTextBox_received.InvokeRequired) richTextBox_received.Invoke(new MethodInvoker(() => { richTextBox_received.Text = "데이터를 불러오는 중입니다."; }));
+                    else richTextBox_received.Text = "데이터를 불러오는 중입니다.";
+                    return;
+                }
+                if ((ReceiveData.StartsWith("@", StringComparison.OrdinalIgnoreCase)) || ReceiveData.EndsWith("#", StringComparison.OrdinalIgnoreCase))
+                {
+                    ReceiveData = ReceiveData.Split(new string[] { "@", "#" }, StringSplitOptions.RemoveEmptyEntries)[0];
+                }
+                else
                 {
                     return;
                 }
 
-                string[] lines = ReceiveData.Split(new string[] { "\n\r" , "\n", "\r"}, StringSplitOptions.RemoveEmptyEntries);
-
                 
-
-                foreach (string cmdLine in lines)
+                
+                if ((ReceiveData.StartsWith("(", StringComparison.OrdinalIgnoreCase)) && ReceiveData.EndsWith(")", StringComparison.OrdinalIgnoreCase))
                 {
-                        if (cmdLine.Equals("Waiting for Starting...", StringComparison.OrdinalIgnoreCase)) // 데이터 시작 부분
+                    int idx_start = ReceiveData.IndexOf('(');
+                    int idx_end = ReceiveData.IndexOf(')');
+
+                    this.Invoke(() =>
                         {
-                            serialPort1.Write("$");
-                            return;
-                        }
 
+                            values = ReceiveData.Remove(0, idx_start + 1).Remove(idx_end - 1, 1).Split(',');
 
-                        else if ((cmdLine.StartsWith("{", StringComparison.OrdinalIgnoreCase)) && cmdLine.EndsWith("}", StringComparison.OrdinalIgnoreCase)) // gyro 데이터 받는 부분
-                        {
-                            int idx_start = cmdLine.IndexOf('{');
-                            int idx_end = cmdLine.IndexOf('}');
-                           
-
-
-
-                            this.Invoke(() =>
+                            if (values.Length < 1)
                             {
-                               
-                                values = cmdLine.Remove(0, idx_start + 1).Remove(idx_end - 1, 1).Split('~');
+                                return;
+                            }
+                            try
+                            {
+                                values[0] = RemoveNonNumericCharacters(values[0]);
+                                values[1] = RemoveNonNumericCharacters(values[1]);
+                                float tmpX = -((float.Parse(values[0])));
+                                float tmpY = -((float.Parse(values[1])));
 
-                                try
+
+                                if ((old_angleX != tmpX) || old_angleY != tmpY)
                                 {
-                                    utimer = new SWSleep();
-                                    double tmpX = -((double.Parse(values[0]))/1.11);
-                                    double tmpY = -((double.Parse(values[1])));
+                                    float diffX = Math.Abs((old_angleX - tmpX) / res);
+                                    float diffY = Math.Abs((old_angleY - tmpY) / res);
 
 
-                                    if ((old_angleX != tmpX) || old_angleY != tmpY)
+                                    if (diffX == 0 && diffY == 0) return;
+
+
+
+                                    for (int i = 0; i < res; i++)
                                     {
-                                        if (Math.Abs(old_angleX - tmpX) > 3) diffX = Math.Abs((old_angleX - tmpX) / res);
-                                        else { diffX = 0; }
-                                        if (Math.Abs(old_angleY - tmpY) > 3) diffY = Math.Abs((old_angleY - tmpY) / res);
-                                        else 
-                                        { 
-                                            diffY = 0;
-                                            if(diffX == 0) return; 
-                                        } 
+                                        //큐에 담아서 해보기
+                                        UpdateAngle(ref old_angleX, tmpX, diffX, ref angleX);
+                                        UpdateAngle(ref old_angleY, tmpY, diffY, ref angleY);
 
-                                        for (int i = 0; i < res; i++)
-                                        {
-                                            if (tmpX > old_angleX)
-                                            {
-                                                old_angleX += diffX;
-                                                angleX = old_angleX;
-                                                glControl1.Invalidate();
-                                                utimer.USleep(5);
-                                            }
-                                            else
-                                            {
-                                                old_angleX -= diffX;
-                                                angleX = old_angleX;
-                                                glControl1.Invalidate();
-                                                utimer.USleep(5);
-                                            }
-                                            
-                                            if (tmpY > old_angleY)
-                                            {
-                                                old_angleY += diffY;
-                                                angleY = old_angleY;
-                                                glControl1.Invalidate();
-                                                utimer.USleep(5);
-                                            }
-                                            else
-                                            {
-                                                old_angleY -= diffY;
-                                                angleY = old_angleY;
-                                                glControl1.Invalidate();
-                                                utimer.USleep(5);
-                                            }
-                                            toolStripStatusLabel1.Text = angleX.ToString() + " " + angleY.ToString() + " diff X " + diffX + " Y " + diffY + " res : " + res;
-                                            utimer.USleep(10);
-
-                                        }
-
-                                        old_angleX = tmpX;
-                                        old_angleY = tmpY;
+                                        richTextBox_received.Text = "X축 각도 : " + angleX + "\n" + "Y축 각도 : " + angleY + "\n" + "Z축 각도 : " + values[2];
+                                        utimer.USleep(10);
                                     }
 
-                                   
-                                    //glControl1.Invalidate();
+                                    glControl1.Invalidate();
 
+                                    old_angleX = tmpX;
+                                    old_angleY = tmpY;
                                 }
-                                catch (IndexOutOfRangeException e)
-                                { }
-                                catch (Exception e) { }
-
-                            });
-                        
-
-                        }
 
 
-                }
+                                //glControl1.Invalidate();
 
-            }  
-            catch (Exception err)
-            {
+                            }
+                            catch (IndexOutOfRangeException e) { }
+                            
+                            catch (Exception e)
+                            {
+
+                                
+                            }
+
+                        });
+
+
+                    }
+                    else
+                    {
+
+                        if (richTextBox_received.InvokeRequired) richTextBox_received.Invoke(new MethodInvoker(() => { richTextBox_received.AppendText(ReceiveData); }));
+                        else richTextBox_received.AppendText(ReceiveData);
+                    }
+
+
+                
             }
-            if (richTextBox_received.InvokeRequired) richTextBox_received.Invoke(new MethodInvoker(() => { richTextBox_received.AppendText(ReceiveData); }));
-            else richTextBox_received.AppendText(ReceiveData);
+
+                //MessageBox.Show(ReceiveData);
+
+                   // string[] lines = ReceiveData.Split(new string[] { "\n\r", "\n", "\r" }, StringSplitOptions.RemoveEmptyEntries);
 
 
+
+              //  foreach (string cmdLine in lines)
+                //{
+
+                    
+
+ //           }
             
-               
-            
-            
+            catch (OperationCanceledException e)
+            {
+                return;
+            }
+            catch (Exception err) { }
+            utimer.USleep(1);
+
+        }
+
+        private void UpdateAngle(ref float oldAngle, float targetAngle, float diff, ref float currentAngle)
+        {
+            if (targetAngle > oldAngle)
+            {
+                oldAngle += diff;
+                currentAngle = oldAngle;
+            }
+            else
+            {
+                oldAngle -= diff;
+                currentAngle = oldAngle;
+            }
+
+            glControl1.Invalidate();
+            utimer.USleep(5);
         }
 
         private void richTextBox_received_TextChanged(object sender, EventArgs e)
@@ -507,6 +466,21 @@ namespace Graphic
             richTextBox_received.ScrollToCaret();
             
 
+        }
+
+        static string RemoveNonNumericCharacters(string input)
+        {
+            StringBuilder result = new StringBuilder();
+
+            foreach (char c in input)
+            {
+                if (char.IsDigit(c) || c == '-')
+                {
+                    result.Append(c);
+                }
+            }
+
+            return result.ToString();
         }
 
     }

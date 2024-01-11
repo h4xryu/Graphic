@@ -47,13 +47,8 @@ namespace Graphic
             serialPort1 = new SerialPort(components);
             label_status = new System.Windows.Forms.Label();
             richTextBox_received = new RichTextBox();
-            textBox_send = new TextBox();
-            button_send = new Button();
             button_disconnect = new Button();
-            statusStrip1 = new StatusStrip();
-            toolStripStatusLabel1 = new ToolStripStatusLabel();
-            myTimer = new System.Windows.Forms.Timer();
-            statusStrip1.SuspendLayout();
+            myTimer = new System.Windows.Forms.Timer(components);
             SuspendLayout();
             // 
             // glControl1
@@ -98,17 +93,19 @@ namespace Graphic
             zedGraphControl1.ScrollMinX = 0D;
             zedGraphControl1.ScrollMinY = 0D;
             zedGraphControl1.ScrollMinY2 = 0D;
-            zedGraphControl1.Size = new Size(695, 363);
+            zedGraphControl1.Size = new Size(569, 332);
             zedGraphControl1.TabIndex = 3;
             zedGraphControl1.UseExtendedPrintDialog = true;
             zedGraphControl1.Load += zedGraphControl1_Load;
             // 
             // comboBox_port
             // 
-            comboBox_port.BackColor = SystemColors.MenuBar;
-            comboBox_port.DropDownStyle = ComboBoxStyle.DropDownList;
+            comboBox_port.BackColor = Color.FromArgb(3, 8, 15);
+            comboBox_port.FlatStyle = FlatStyle.Popup;
+            comboBox_port.ForeColor = Color.Lime;
             comboBox_port.FormattingEnabled = true;
-            comboBox_port.Location = new Point(5, 2);
+            comboBox_port.ImeMode = ImeMode.NoControl;
+            comboBox_port.Location = new Point(1016, 739);
             comboBox_port.Margin = new Padding(2);
             comboBox_port.Name = "comboBox_port";
             comboBox_port.Size = new Size(118, 23);
@@ -117,14 +114,15 @@ namespace Graphic
             // 
             // btnSerial
             // 
-            btnSerial.FlatStyle = FlatStyle.System;
-            btnSerial.Location = new Point(135, 2);
+            btnSerial.BackColor = Color.FromArgb(15, 30, 45);
+            btnSerial.FlatStyle = FlatStyle.Popup;
+            btnSerial.Location = new Point(1160, 739);
             btnSerial.Margin = new Padding(2);
             btnSerial.Name = "btnSerial";
-            btnSerial.Size = new Size(73, 21);
+            btnSerial.Size = new Size(84, 23);
             btnSerial.TabIndex = 5;
             btnSerial.Text = "connect";
-            btnSerial.UseVisualStyleBackColor = true;
+            btnSerial.UseVisualStyleBackColor = false;
             btnSerial.Click += btnSerial_Click;
             // 
             // serialPort1
@@ -133,7 +131,8 @@ namespace Graphic
             serialPort1.DataBits = 8;
             serialPort1.DiscardNull = false;
             serialPort1.DtrEnable = false;
-
+            //asciiEncoding1.DecoderFallback = decoderReplacementFallback1;
+            //asciiEncoding1.EncoderFallback = encoderReplacementFallback1;
             serialPort1.Encoding = asciiEncoding1;
             serialPort1.Handshake = Handshake.None;
             serialPort1.NewLine = "\n";
@@ -147,13 +146,13 @@ namespace Graphic
             serialPort1.StopBits = StopBits.One;
             serialPort1.WriteBufferSize = 1024;
             serialPort1.WriteTimeout = 500;
-            serialPort1.DataReceived += new SerialDataReceivedEventHandler(serialPort1_DataReceived);
+            serialPort1.DataReceived += serialPort1_DataReceived;
             // 
             // label_status
             // 
             label_status.AutoSize = true;
             label_status.ForeColor = SystemColors.ControlLightLight;
-            label_status.Location = new Point(5, 27);
+            label_status.Location = new Point(1016, 722);
             label_status.Margin = new Padding(2, 0, 2, 0);
             label_status.Name = "label_status";
             label_status.Size = new Size(107, 15);
@@ -164,63 +163,26 @@ namespace Graphic
             // 
             richTextBox_received.BackColor = Color.FromArgb(3, 8, 15);
             richTextBox_received.ForeColor = Color.Lime;
-            richTextBox_received.Location = new Point(62, 52);
+            richTextBox_received.Location = new Point(62, 44);
             richTextBox_received.Margin = new Padding(2);
             richTextBox_received.Name = "richTextBox_received";
-            richTextBox_received.Size = new Size(695, 310);
+            richTextBox_received.Size = new Size(286, 310);
             richTextBox_received.TabIndex = 7;
             richTextBox_received.Text = "";
             richTextBox_received.TextChanged += richTextBox_received_TextChanged;
             // 
-            // textBox_send
-            // 
-            textBox_send.BackColor = Color.FromArgb(20, 28, 35);
-            textBox_send.ForeColor = Color.Lime;
-            textBox_send.Location = new Point(320, 2);
-            textBox_send.Margin = new Padding(2);
-            textBox_send.Name = "textBox_send";
-            textBox_send.Size = new Size(330, 23);
-            textBox_send.TabIndex = 8;
-            // 
-            // button_send
-            // 
-            button_send.FlatStyle = FlatStyle.System;
-            button_send.Location = new Point(684, 2);
-            button_send.Margin = new Padding(2);
-            button_send.Name = "button_send";
-            button_send.Size = new Size(73, 22);
-            button_send.TabIndex = 9;
-            button_send.Text = "send";
-            button_send.UseVisualStyleBackColor = true;
-            button_send.Click += Button_send_Click;
-            // 
             // button_disconnect
             // 
-            button_disconnect.FlatStyle = FlatStyle.System;
-            button_disconnect.Location = new Point(212, 2);
+            button_disconnect.BackColor = Color.FromArgb(15, 30, 45);
+            button_disconnect.FlatStyle = FlatStyle.Popup;
+            button_disconnect.Location = new Point(1260, 739);
             button_disconnect.Margin = new Padding(2);
             button_disconnect.Name = "button_disconnect";
-            button_disconnect.Size = new Size(73, 21);
+            button_disconnect.Size = new Size(84, 23);
             button_disconnect.TabIndex = 10;
             button_disconnect.Text = "disconnect";
-            button_disconnect.UseVisualStyleBackColor = true;
+            button_disconnect.UseVisualStyleBackColor = false;
             button_disconnect.Click += button_disconnect_Click_1;
-            // 
-            // statusStrip1
-            // 
-            statusStrip1.ImageScalingSize = new Size(20, 20);
-            statusStrip1.Items.AddRange(new ToolStripItem[] { toolStripStatusLabel1 });
-            statusStrip1.Location = new Point(0, 774);
-            statusStrip1.Name = "statusStrip1";
-            statusStrip1.RenderMode = ToolStripRenderMode.ManagerRenderMode;
-            statusStrip1.Size = new Size(1493, 22);
-            statusStrip1.TabIndex = 0;
-            statusStrip1.Text = "statusStrip";
-            // 
-            // toolStripStatusLabel1
-            // 
-            toolStripStatusLabel1.Name = "toolStripStatusLabel1";
-            toolStripStatusLabel1.Size = new Size(0, 17);
             // 
             // PaintForm
             // 
@@ -230,8 +192,6 @@ namespace Graphic
             BackgroundImageLayout = ImageLayout.None;
             ClientSize = new Size(1493, 796);
             Controls.Add(button_disconnect);
-            Controls.Add(button_send);
-            Controls.Add(textBox_send);
             Controls.Add(richTextBox_received);
             Controls.Add(label_status);
             Controls.Add(btnSerial);
@@ -239,7 +199,6 @@ namespace Graphic
             Controls.Add(glControl1);
             Controls.Add(zedGraphControl1);
             Controls.Add(closeBtn);
-            Controls.Add(statusStrip1);
             FormBorderStyle = FormBorderStyle.None;
             Location = new Point(200, 100);
             Margin = new Padding(2);
@@ -247,14 +206,8 @@ namespace Graphic
             StartPosition = FormStartPosition.Manual;
             Text = "PaintForm";
             Load += PaintForm_Load;
-            statusStrip1.ResumeLayout(false);
-            statusStrip1.PerformLayout();
             ResumeLayout(false);
             PerformLayout();
-            //
-            // myTimer
-            //
-
         }
 
         #endregion
@@ -266,11 +219,7 @@ namespace Graphic
         private SerialPort serialPort1;
         private System.Windows.Forms.Label label_status;
         private RichTextBox richTextBox_received;
-        private TextBox textBox_send;
-        private Button button_send;
         private Button button_disconnect;
-        private StatusStrip statusStrip1;
-        private ToolStripStatusLabel toolStripStatusLabel1;
         private System.Windows.Forms.Timer myTimer;
     }
 }
