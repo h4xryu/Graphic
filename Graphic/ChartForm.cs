@@ -16,11 +16,14 @@ namespace Graphic
         double x, y;           //XAxis YAxis
         LineItem line;        //라인
         PointPairList Speed;  //그래프 점.
-
+        System.Windows.Forms.Timer Zed_Timer = new System.Windows.Forms.Timer();
         
         private void Graph_init()
         {
-            //Zed_Timer.Start(); // Timer Start
+            
+            Zed_Timer.Interval = 1000;
+            Zed_Timer.Tick += Zed_Timer_Tick;
+            Zed_Timer.Start(); // Timer Start
 
             /**********그래프 설정**********/
             GraphPane MyPane = zedGraphControl1.GraphPane;

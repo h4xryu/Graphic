@@ -32,12 +32,13 @@ namespace Graphic
         private List<string?> ypr;
         private float old_angleX = 0;
         private float old_angleY = 0;
-        private float res = 125;
+        private float res = 10;
         private float diffX = 0;
         private float diffY = 0;
         private string[] values;
         private bool ang_flag = false;
         private SWSleep utimer;
+        private bool isRunning = false;
 
         public PaintForm()
         {
@@ -56,6 +57,7 @@ namespace Graphic
         private void PaintForm_Load(object sender, EventArgs e)
         {
             comboBox_port.DataSource = SerialPort.GetPortNames();
+            richTextBox_received.Text = "연결하려면 connect버튼을 누르세요.";
             //button_send.Enabled = false;
         }
 
@@ -274,18 +276,21 @@ namespace Graphic
         }
         private void MySerialReceived(object? s, EventArgs e)  //여기에서 수신 데이타를 사용자의 용도에 따라 처리한다.
         {
+           
 
-            term = new Thread(Terminal_thread);
-            term.IsBackground = true;
-
-            
-
-
-            if (term.ThreadState != ThreadState.Running)
+            // 이미 실행 중인 스레드가 있으면 다시 시작하지 않음
+            if (term == null || term.ThreadState != ThreadState.Running)
             {
-               term.Start();
-            }
+                term = new Thread(Terminal_thread);
+                term.IsBackground = true;
 
+                // lock이 성공했을 때만 스레드 시작
+                if (Monitor.TryEnter(term))
+                {
+                    lock (term) { term.Start(); }
+                }
+            }
+            
 
             serialPort1.DiscardInBuffer();
             serialPort1.DiscardOutBuffer();
@@ -318,7 +323,6 @@ namespace Graphic
 
         private void Terminal_thread()
         {
-
             utimer = new SWSleep();
 
 
@@ -328,7 +332,7 @@ namespace Graphic
 
             try
             {
-                ReceiveData = (string)serialPort1.ReadLine(); //시리얼 포트에 수신된 데이타를 ReceiveData 읽어오기
+                ReceiveData = (string?)serialPort1.ReadLine(); //시리얼 포트에 수신된 데이타를 ReceiveData 읽어오기
                 if (ReceiveData == string.Empty)
                 {
                     if (richTextBox_received.InvokeRequired) richTextBox_received.Invoke(new MethodInvoker(() => { richTextBox_received.Text = "데이터를 불러오는 중입니다."; }));
@@ -341,6 +345,8 @@ namespace Graphic
                 }
                 else
                 {
+                    if (richTextBox_received.InvokeRequired) richTextBox_received.Invoke(new MethodInvoker(() => { richTextBox_received.Text = "데이터를 불러오는 중입니다."; }));
+                    else richTextBox_received.Text = "데이터를 불러오는 중입니다.";
                     return;
                 }
 
@@ -364,37 +370,16 @@ namespace Graphic
                             {
                                 values[0] = RemoveNonNumericCharacters(values[0]);
                                 values[1] = RemoveNonNumericCharacters(values[1]);
-                                float tmpX = -((float.Parse(values[0])));
-                                float tmpY = -((float.Parse(values[1])));
+                                values[2] = RemoveNonNumericCharacters(values[2]);
+
+                                angleX = -((int.Parse(values[0])));
+                                angleY = -((int.Parse(values[1])));
+
+                                richTextBox_received.Text = "X축 각도 : " + angleX + "\n" + "Y축 각도 : " + angleY + "\n" + "Z축 각도 : " + - ((int.Parse(values[2])));
+                               
 
 
-                                if ((old_angleX != tmpX) || old_angleY != tmpY)
-                                {
-                                    float diffX = Math.Abs((old_angleX - tmpX) / res);
-                                    float diffY = Math.Abs((old_angleY - tmpY) / res);
-
-
-                                    if (diffX == 0 && diffY == 0) return;
-
-
-
-                                    for (int i = 0; i < res; i++)
-                                    {
-                                        UpdateAngle(ref old_angleX, tmpX, diffX, ref angleX);
-                                        UpdateAngle(ref old_angleY, tmpY, diffY, ref angleY);
-
-                                        richTextBox_received.Text = "X축 각도 : " + angleX + "\n" + "Y축 각도 : " + angleY + "\n" + "Z축 각도 : " + values[2];
-                                        utimer.USleep(10);
-                                    }
-
-                                    glControl1.Invalidate();
-
-                                    old_angleX = tmpX;
-                                    old_angleY = tmpY;
-                                }
-
-
-                                //glControl1.Invalidate();
+                                glControl1.Invalidate();
 
                             }
                             catch (IndexOutOfRangeException e) { }
@@ -411,9 +396,6 @@ namespace Graphic
                     }
                     else
                     {
-
-                        if (richTextBox_received.InvokeRequired) richTextBox_received.Invoke(new MethodInvoker(() => { richTextBox_received.AppendText(ReceiveData); }));
-                        else richTextBox_received.AppendText(ReceiveData);
                     }
 
 
@@ -438,8 +420,6 @@ namespace Graphic
                 return;
             }
             catch (Exception err) { }
-            utimer.USleep(1);
-
         }
 
         private void UpdateAngle(ref float oldAngle, float targetAngle, float diff, ref float currentAngle)
@@ -448,15 +428,16 @@ namespace Graphic
             {
                 oldAngle += diff;
                 currentAngle = oldAngle;
+
             }
             else
             {
                 oldAngle -= diff;
                 currentAngle = oldAngle;
             }
-
             glControl1.Invalidate();
             utimer.USleep(1);
+
         }
 
         private void richTextBox_received_TextChanged(object sender, EventArgs e)

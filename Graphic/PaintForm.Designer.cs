@@ -93,7 +93,7 @@ namespace Graphic
             zedGraphControl1.ScrollMinX = 0D;
             zedGraphControl1.ScrollMinY = 0D;
             zedGraphControl1.ScrollMinY2 = 0D;
-            zedGraphControl1.Size = new Size(569, 332);
+            zedGraphControl1.Size = new Size(543, 332);
             zedGraphControl1.TabIndex = 3;
             zedGraphControl1.UseExtendedPrintDialog = true;
             zedGraphControl1.Load += zedGraphControl1_Load;
@@ -163,10 +163,10 @@ namespace Graphic
             // 
             richTextBox_received.BackColor = Color.FromArgb(3, 8, 15);
             richTextBox_received.ForeColor = Color.Lime;
-            richTextBox_received.Location = new Point(62, 44);
+            richTextBox_received.Location = new Point(642, 382);
             richTextBox_received.Margin = new Padding(2);
             richTextBox_received.Name = "richTextBox_received";
-            richTextBox_received.Size = new Size(286, 310);
+            richTextBox_received.Size = new Size(286, 332);
             richTextBox_received.TabIndex = 7;
             richTextBox_received.Text = "";
             richTextBox_received.TextChanged += richTextBox_received_TextChanged;
