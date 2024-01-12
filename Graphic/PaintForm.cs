@@ -32,7 +32,7 @@ namespace Graphic
         private List<string?> ypr;
         private float old_angleX = 0;
         private float old_angleY = 0;
-        private float res = 180;
+        private float res = 125;
         private float diffX = 0;
         private float diffY = 0;
         private string[] values;
@@ -380,7 +380,6 @@ namespace Graphic
 
                                     for (int i = 0; i < res; i++)
                                     {
-                                        //큐에 담아서 해보기
                                         UpdateAngle(ref old_angleX, tmpX, diffX, ref angleX);
                                         UpdateAngle(ref old_angleY, tmpY, diffY, ref angleY);
 
@@ -457,7 +456,7 @@ namespace Graphic
             }
 
             glControl1.Invalidate();
-            utimer.USleep(5);
+            utimer.USleep(1);
         }
 
         private void richTextBox_received_TextChanged(object sender, EventArgs e)
