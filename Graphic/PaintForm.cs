@@ -11,10 +11,11 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
+using static System.Windows.Forms.LinkLabel;
+using ZedGraph;
 
 namespace Graphic
 {
-
     public partial class PaintForm : Form
     {
         private System.Text.ASCIIEncoding asciiEncodingSealed1 = new System.Text.ASCIIEncoding();
@@ -27,7 +28,7 @@ namespace Graphic
         private int command_bufsize = 0;
         private Thread term;
         private List<string?> acc;
-        private List<string?> gyro= new List<string?>();
+        private List<string?> gyro = new List<string?>();
         private List<string?> mag;
         private List<string?> ypr;
         private float old_angleX = 0;
@@ -39,6 +40,17 @@ namespace Graphic
         private bool ang_flag = false;
         private SWSleep utimer;
         private bool isRunning = false;
+
+        /*************************************Graph************************************/
+        double x, y_pitch, y_roll, y_yaw, t;           //XAxis YAxis
+        LineItem line_pitch;        //라인
+        LineItem line_roll;
+        LineItem line_yaw;
+        PointPairList Pitch;  //그래프 점. pitch
+        PointPairList Roll;
+        PointPairList Yaw;
+        System.Windows.Forms.Timer Zed_Timer = new System.Windows.Forms.Timer();
+        GraphPane MyPane;
 
         public PaintForm()
         {
@@ -253,7 +265,7 @@ namespace Graphic
                 {
                     serialPort1.Open();  //시리얼포트 열기
                     richTextBox_received.Text = string.Empty;
-                    
+                    Zed_Timer.Start(); // Timer Start
                 }
                 catch (Exception err)
                 {
@@ -272,11 +284,11 @@ namespace Graphic
         private void serialPort1_DataReceived(object sender, SerialDataReceivedEventArgs e)
         {
             this.Invoke(new EventHandler(MySerialReceived));
-            
+
         }
         private void MySerialReceived(object? s, EventArgs e)  //여기에서 수신 데이타를 사용자의 용도에 따라 처리한다.
         {
-           
+
 
             // 이미 실행 중인 스레드가 있으면 다시 시작하지 않음
             if (term == null || term.ThreadState != ThreadState.Running)
@@ -290,7 +302,7 @@ namespace Graphic
                     lock (term) { term.Start(); }
                 }
             }
-            
+
 
             serialPort1.DiscardInBuffer();
             serialPort1.DiscardOutBuffer();
@@ -298,7 +310,7 @@ namespace Graphic
         }
         private void Button_send_Click(object sender, EventArgs e)  //보내기 버튼을 클릭하면
         {
-           // serialPort1.Write(textBox_send.Text);  //텍스트박스의 텍스트를 시리얼통신으로 송신
+            // serialPort1.Write(textBox_send.Text);  //텍스트박스의 텍스트를 시리얼통신으로 송신
             //textBox_send.Text = string.Empty;
         }
 
@@ -306,14 +318,19 @@ namespace Graphic
         {
             angleX = 0;
             angleY = 0;
-           // button_send.Enabled = false;
+            // button_send.Enabled = false;
             if (serialPort1.IsOpen)  //시리얼포트가 열려 있으면
             {
                 command_bufsize = 0;
                 serialPort1.Close();  //시리얼포트 닫기
-
+                Zed_Timer.Stop();
                 label_status.Text = "포트가 닫혔습니다.";
                 comboBox_port.Enabled = true;  //COM포트설정 콤보박스 활성화
+                Pitch.Clear();
+                Roll.Clear();
+                Yaw.Clear();
+                x = 0;
+                t= 0;
             }
             else  //시리얼포트가 닫혀 있으면
             {
@@ -350,8 +367,8 @@ namespace Graphic
                     return;
                 }
 
-                
-                
+
+
                 if ((ReceiveData.StartsWith("(", StringComparison.OrdinalIgnoreCase)) && ReceiveData.EndsWith(")", StringComparison.OrdinalIgnoreCase))
                 {
                     int idx_start = ReceiveData.IndexOf('(');
@@ -375,46 +392,44 @@ namespace Graphic
                                 angleX = -((int.Parse(values[0])));
                                 angleY = -((int.Parse(values[1])));
 
-                                richTextBox_received.Text = "X축 각도 : " + angleX + "\n" + "Y축 각도 : " + angleY + "\n" + "Z축 각도 : " + - ((int.Parse(values[2])));
-                               
-
+                                richTextBox_received.Text = "X축 각도 : " + angleX + "\n" + "Y축 각도 : " + angleY + "\n" + "Z축 각도 : " + -((int.Parse(values[2])));
 
                                 glControl1.Invalidate();
 
                             }
                             catch (IndexOutOfRangeException e) { }
-                            
+
                             catch (Exception e)
                             {
 
-                                
+
                             }
 
                         });
 
 
-                    }
-                    else
-                    {
-                    }
+                }
+                else
+                {
+                }
 
 
-                
+
             }
 
-                //MessageBox.Show(ReceiveData);
+            //MessageBox.Show(ReceiveData);
 
-                   // string[] lines = ReceiveData.Split(new string[] { "\n\r", "\n", "\r" }, StringSplitOptions.RemoveEmptyEntries);
+            // string[] lines = ReceiveData.Split(new string[] { "\n\r", "\n", "\r" }, StringSplitOptions.RemoveEmptyEntries);
 
 
 
-              //  foreach (string cmdLine in lines)
-                //{
+            //  foreach (string cmdLine in lines)
+            //{
 
-                    
 
- //           }
-            
+
+            //           }
+
             catch (OperationCanceledException e)
             {
                 return;
@@ -444,7 +459,7 @@ namespace Graphic
         {
             richTextBox_received.SelectionStart = richTextBox_received.TextLength;
             richTextBox_received.ScrollToCaret();
-            
+
 
         }
 
@@ -463,5 +478,87 @@ namespace Graphic
             return result.ToString();
         }
 
+
+        /*************************************Graph************************************/
+        private void Graph_init()
+        {
+
+            Zed_Timer.Interval = 500;
+            Zed_Timer.Tick += Zed_Timer_Tick;
+            MyPane = zedGraphControl1.GraphPane;
+
+            /**********그래프 설정**********/
+
+            MyPane.Chart.Fill = new Fill(Color.FromArgb(3, 8, 15), Color.FromArgb(3, 8, 15), 180.0f);
+            //zedGraphControl1.MasterPane.Fill.Color = Color.FromArgb(3, 8, 15);
+            foreach (GraphPane pane in zedGraphControl1.MasterPane.PaneList)
+            {
+                pane.Fill.Color = Color.FromArgb(3, 8, 15); ;
+            }
+            /**********x축 y축 설정**********/
+            MyPane.XAxis.Scale.FontSpec.FontColor = Color.White;
+            MyPane.YAxis.Scale.FontSpec.FontColor = Color.White;
+            MyPane.XAxis.Title.FontSpec.FontColor = Color.White;
+            MyPane.YAxis.Title.FontSpec.FontColor = Color.White;
+            MyPane.Title.FontSpec.FontColor = Color.White;
+            MyPane.Border.Color = Color.FromArgb(3, 8, 15);
+            MyPane.Title.Text = "";
+            MyPane.XAxis.Title.Text = "";
+            MyPane.YAxis.Title.Text = "";
+            MyPane.XAxis.Scale.MinorStep = -1;    //작은 눈금 
+            MyPane.XAxis.Scale.MajorStep = 1;   //큰 눈금
+            MyPane.XAxis.Scale.Min = 0;
+            MyPane.XAxis.Scale.Max = 20;
+            MyPane.YAxis.Scale.MinorStep = -5;
+            MyPane.YAxis.Scale.MajorStep = 10;
+            MyPane.YAxis.Scale.Min = -180;
+            MyPane.YAxis.Scale.Max = 180;
+
+            /**********눈금 색**********/
+            MyPane.XAxis.MajorTic.Color = Color.FromArgb(23, 28, 35);
+            MyPane.YAxis.MajorTic.Color = Color.FromArgb(23, 28, 35);
+
+            Pitch = new PointPairList();
+            Roll = new PointPairList();
+            Yaw = new PointPairList();
+            line_pitch = MyPane.AddCurve("Pitch", Pitch, Color.Orange, SymbolType.None);//라인
+            line_roll = MyPane.AddCurve("Roll", Roll, Color.Lime, SymbolType.None);//라인
+            line_yaw = MyPane.AddCurve("Yaw", Yaw, Color.Red, SymbolType.None);//라인
+
+        }
+
+
+
+      
+
+        private void STOP_btn_Click(object sender, EventArgs e)
+        {
+            //Zed_Timer.Stop();
+        }
+
+        private void START_btn_Click(object sender, EventArgs e)
+        {
+            //Zed_Timer.Start();
+        }
+
+        private void Zed_Timer_Tick(object sender, EventArgs e)
+        {
+            Pitch.Add(x, y_pitch);
+            Roll.Add(x, y_roll);
+            Yaw.Add(x, y_yaw);
+            
+            x += 0.5;
+            y_pitch = angleX;
+            y_roll = angleY;
+            y_yaw = -((int.Parse(values[2])));
+
+            if (x >= 20)
+            {
+                t += 0.5;
+                MyPane.XAxis.Scale.Min = t;
+                MyPane.XAxis.Scale.Max = x;
+            }
+            zedGraphControl1.Refresh();
+        }
     }
 }

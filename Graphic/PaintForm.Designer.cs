@@ -57,10 +57,10 @@ namespace Graphic
             glControl1.BackColor = Color.FromArgb(3, 8, 15);
             glControl1.BackgroundImageLayout = ImageLayout.None;
             glControl1.ForeColor = Color.FromArgb(3, 8, 15);
-            glControl1.Location = new Point(1016, 407);
-            glControl1.Margin = new Padding(3, 4, 3, 4);
+            glControl1.Location = new Point(1306, 543);
+            glControl1.Margin = new Padding(4, 5, 4, 5);
             glControl1.Name = "glControl1";
-            glControl1.Size = new Size(430, 291);
+            glControl1.Size = new Size(553, 388);
             glControl1.TabIndex = 1;
             glControl1.TabStop = false;
             glControl1.VSync = false;
@@ -70,10 +70,10 @@ namespace Graphic
             // 
             closeBtn.BackColor = Color.FromArgb(15, 30, 45);
             closeBtn.FlatStyle = FlatStyle.Popup;
-            closeBtn.Location = new Point(1358, 739);
+            closeBtn.Location = new Point(1746, 985);
             closeBtn.Margin = new Padding(0);
             closeBtn.Name = "closeBtn";
-            closeBtn.Size = new Size(88, 23);
+            closeBtn.Size = new Size(113, 31);
             closeBtn.TabIndex = 0;
             closeBtn.TabStop = false;
             closeBtn.Text = "close";
@@ -83,8 +83,8 @@ namespace Graphic
             // zedGraphControl1
             // 
             zedGraphControl1.ForeColor = SystemColors.ControlLightLight;
-            zedGraphControl1.Location = new Point(62, 382);
-            zedGraphControl1.Margin = new Padding(3, 4, 3, 4);
+            zedGraphControl1.Location = new Point(80, 509);
+            zedGraphControl1.Margin = new Padding(4, 5, 4, 5);
             zedGraphControl1.Name = "zedGraphControl1";
             zedGraphControl1.ScrollGrace = 0D;
             zedGraphControl1.ScrollMaxX = 0D;
@@ -93,7 +93,7 @@ namespace Graphic
             zedGraphControl1.ScrollMinX = 0D;
             zedGraphControl1.ScrollMinY = 0D;
             zedGraphControl1.ScrollMinY2 = 0D;
-            zedGraphControl1.Size = new Size(543, 332);
+            zedGraphControl1.Size = new Size(698, 443);
             zedGraphControl1.TabIndex = 3;
             zedGraphControl1.UseExtendedPrintDialog = true;
             zedGraphControl1.Load += zedGraphControl1_Load;
@@ -105,10 +105,9 @@ namespace Graphic
             comboBox_port.ForeColor = Color.Lime;
             comboBox_port.FormattingEnabled = true;
             comboBox_port.ImeMode = ImeMode.NoControl;
-            comboBox_port.Location = new Point(1016, 739);
-            comboBox_port.Margin = new Padding(2);
+            comboBox_port.Location = new Point(1306, 985);
             comboBox_port.Name = "comboBox_port";
-            comboBox_port.Size = new Size(118, 23);
+            comboBox_port.Size = new Size(151, 28);
             comboBox_port.TabIndex = 4;
             comboBox_port.SelectedIndexChanged += comboBox1_SelectedIndexChanged;
             // 
@@ -116,10 +115,9 @@ namespace Graphic
             // 
             btnSerial.BackColor = Color.FromArgb(15, 30, 45);
             btnSerial.FlatStyle = FlatStyle.Popup;
-            btnSerial.Location = new Point(1160, 739);
-            btnSerial.Margin = new Padding(2);
+            btnSerial.Location = new Point(1491, 985);
             btnSerial.Name = "btnSerial";
-            btnSerial.Size = new Size(84, 23);
+            btnSerial.Size = new Size(108, 31);
             btnSerial.TabIndex = 5;
             btnSerial.Text = "connect";
             btnSerial.UseVisualStyleBackColor = false;
@@ -131,8 +129,6 @@ namespace Graphic
             serialPort1.DataBits = 8;
             serialPort1.DiscardNull = false;
             serialPort1.DtrEnable = false;
-            //asciiEncoding1.DecoderFallback = decoderReplacementFallback1;
-            //asciiEncoding1.EncoderFallback = encoderReplacementFallback1;
             serialPort1.Encoding = asciiEncoding1;
             serialPort1.Handshake = Handshake.None;
             serialPort1.NewLine = "\n";
@@ -152,21 +148,20 @@ namespace Graphic
             // 
             label_status.AutoSize = true;
             label_status.ForeColor = SystemColors.ControlLightLight;
-            label_status.Location = new Point(1016, 722);
-            label_status.Margin = new Padding(2, 0, 2, 0);
+            label_status.Location = new Point(1306, 963);
             label_status.Name = "label_status";
-            label_status.Size = new Size(107, 15);
+            label_status.Size = new Size(134, 20);
             label_status.TabIndex = 6;
             label_status.Text = "포트를 연결하세요";
             // 
             // richTextBox_received
             // 
             richTextBox_received.BackColor = Color.FromArgb(3, 8, 15);
+            richTextBox_received.BorderStyle = BorderStyle.None;
             richTextBox_received.ForeColor = Color.Lime;
-            richTextBox_received.Location = new Point(642, 382);
-            richTextBox_received.Margin = new Padding(2);
+            richTextBox_received.Location = new Point(785, 509);
             richTextBox_received.Name = "richTextBox_received";
-            richTextBox_received.Size = new Size(286, 332);
+            richTextBox_received.Size = new Size(367, 183);
             richTextBox_received.TabIndex = 7;
             richTextBox_received.Text = "";
             richTextBox_received.TextChanged += richTextBox_received_TextChanged;
@@ -175,10 +170,9 @@ namespace Graphic
             // 
             button_disconnect.BackColor = Color.FromArgb(15, 30, 45);
             button_disconnect.FlatStyle = FlatStyle.Popup;
-            button_disconnect.Location = new Point(1260, 739);
-            button_disconnect.Margin = new Padding(2);
+            button_disconnect.Location = new Point(1620, 985);
             button_disconnect.Name = "button_disconnect";
-            button_disconnect.Size = new Size(84, 23);
+            button_disconnect.Size = new Size(108, 31);
             button_disconnect.TabIndex = 10;
             button_disconnect.Text = "disconnect";
             button_disconnect.UseVisualStyleBackColor = false;
@@ -186,11 +180,11 @@ namespace Graphic
             // 
             // PaintForm
             // 
-            AutoScaleDimensions = new SizeF(7F, 15F);
+            AutoScaleDimensions = new SizeF(9F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.FromArgb(3, 8, 15);
             BackgroundImageLayout = ImageLayout.None;
-            ClientSize = new Size(1493, 796);
+            ClientSize = new Size(1920, 1061);
             Controls.Add(button_disconnect);
             Controls.Add(richTextBox_received);
             Controls.Add(label_status);
@@ -201,7 +195,6 @@ namespace Graphic
             Controls.Add(closeBtn);
             FormBorderStyle = FormBorderStyle.None;
             Location = new Point(200, 100);
-            Margin = new Padding(2);
             Name = "PaintForm";
             StartPosition = FormStartPosition.Manual;
             Text = "PaintForm";
