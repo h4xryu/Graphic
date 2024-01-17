@@ -40,7 +40,8 @@ namespace Graphic
         private bool ang_flag = false;
         private SWSleep utimer;
         private bool isRunning = false;
-
+        int centerX = 1050;
+        int centerY = 710;
         /*************************************Graph************************************/
         double x, y_pitch, y_roll, y_yaw, t;           //XAxis YAxis
         LineItem line_pitch;        //라인
@@ -51,13 +52,16 @@ namespace Graphic
         PointPairList Yaw;
         System.Windows.Forms.Timer Zed_Timer = new System.Windows.Forms.Timer();
         GraphPane MyPane;
-
+        Graphics g;
+        Graphics g1;
         public PaintForm()
         {
 
             this.Paint += new System.Windows.Forms.PaintEventHandler(PaintForm_Paint);
             InitializeComponent();
             Graph_init();
+            g = this.CreateGraphics();
+            g1 = this.CreateGraphics();
         }
 
         private void PaintForm_Paint(object sender, PaintEventArgs e)
@@ -70,16 +74,140 @@ namespace Graphic
         {
             comboBox_port.DataSource = SerialPort.GetPortNames();
             richTextBox_received.Text = "연결하려면 connect버튼을 누르세요.";
-            //button_send.Enabled = false;
+
+
         }
 
         private void btnPaint_Click(object sender, EventArgs e)
         {
-            Graphics g = this.CreateGraphics();
-            g.DrawString("Create Graphics!!", new Font("굴림", 20), Brushes.Black, 50, 80);
+
+
         }
 
+        private void motionGraphics(Graphics g)
+        {
+            //g.Clear(Color.FromArgb(3, 8, 15));
+            //SolidBrush boxColor = new SolidBrush(Color.FromArgb(23, 28, 35));
+            //Pen boxPen = new Pen(Color.FromArgb(23, 28, 35), 60);
+            //Rectangle boxRect_yaw = new Rectangle(900, 560, 300, 300);
+            //Rectangle yaw_base = new Rectangle(920, 580, 260, 260);
+            //Rectangle yaw_center = new Rectangle(1035, 695, 30, 30);
 
+            //g.DrawEllipse(boxPen, boxRect_yaw);
+            //g.FillEllipse(boxColor, boxRect_yaw);
+            //g.DrawEllipse(new Pen(Color.FromArgb(3, 8, 15), -1), yaw_base);
+            //g.FillEllipse(new SolidBrush(Color.FromArgb(3, 8, 15)), yaw_base);
+            //g.DrawEllipse(boxPen, yaw_center);
+            //g.FillEllipse(boxColor, yaw_center);
+
+
+            // 나침반 틀의 색상 및 크기 설정
+            SolidBrush boxColor = new SolidBrush(Color.FromArgb(23, 28, 35));
+            Pen boxPen = new Pen(Color.FromArgb(23, 28, 35), 50);
+            Rectangle boxRect_yaw = new Rectangle(900, 560, 300, 300);
+            Rectangle yaw_base = new Rectangle(920, 580, 260, 260);
+            Rectangle yaw_center = new Rectangle(1035, 695, 30, 30);
+
+            // 나침반 틀 그리기
+            g.DrawEllipse(boxPen, boxRect_yaw);
+
+            // 나침반의 센터 좌표 설정
+
+            float currentAngle = 0.0f;
+
+            // 방위 라벨 그리기
+            DrawDirectionLabel(g, centerX, centerY);
+
+            // 눈금자 그리기
+            DrawTicks(g, centerX, centerY, boxRect_yaw.Width / 2, boxRect_yaw.Height / 2, 20, 5);
+
+            // 나침반의 현재 각도 라벨 그리기
+            DrawAngleLabel(g, centerX, centerY, currentAngle);
+
+            // 현재 각도에 따라 움직이는 화살표 그리기
+            DrawArrow(g, centerX, centerY, currentAngle);
+
+            float arrowLength = 185.0f;
+            float arrowWidth = 15.0f;
+
+            // 화살표의 끝점 좌표 계산
+            float arrowEndX = 1050;
+            float arrowEndY = centerY- arrowLength;
+
+            float arrowLeftX = arrowEndX - arrowWidth / 2;
+            float arrowLeftY = arrowEndY + arrowWidth * (float)Math.Sin(DegreeToRadian(90.0f));
+            float arrowRightX = arrowEndX + arrowWidth / 2;
+            float arrowRightY = arrowEndY + arrowWidth * (float)Math.Sin(DegreeToRadian(90.0f));
+
+            // 노란색 화살표 그리기
+            PointF[] arrowPoints = { new PointF(arrowEndX, arrowEndY), new PointF(arrowLeftX, arrowLeftY), new PointF(arrowRightX, arrowRightY) };
+            g.FillPolygon(Brushes.Yellow, arrowPoints);
+
+            // 나머지 그래픽 리소스 해제
+            boxPen.Dispose();
+            boxColor.Dispose();
+
+        }
+
+        private void DrawArrow(Graphics g, int centerX, int centerY, float angle)
+        {
+            // 화살표 그리기
+           
+        }
+        private static void DrawDirectionLabel(Graphics g, int centerX, int centerY)
+        { 
+            // 방위 라벨 그리기 (N, S, W, E)
+            g.DrawString("N", new Font("Arial", 17), Brushes.Black, centerX - 15, centerY - 170);
+            g.DrawString("S", new Font("Arial", 17), Brushes.Black, centerX - 15, centerY + 140);
+            g.DrawString("W", new Font("Arial", 17), Brushes.Black, centerX - 170, centerY - 15);
+            g.DrawString("E", new Font("Arial", 17), Brushes.Black, centerX + 140, centerY - 15);
+        }
+
+        private static void DrawTicks(Graphics g, int centerX, int centerY, float radiusX, float radiusY, int tickLength, int tickWidth)
+        {
+            // 눈금자 그리기
+            int numTicks = 12; // 360도를 30도 간격으로 나누어 12개의 눈금을 그립니다.
+            float anglePerTick = 360.0f / numTicks;
+
+            for (int i = 0; i < numTicks; i++)
+            {
+                if(i == 0 || i % 3 == 0)
+                {
+                    continue;
+                }
+                float currentAngle = i * anglePerTick;
+
+                // 눈금자의 끝점 좌표 계산
+                float endX = centerX + radiusX * (float)Math.Cos(DegreeToRadian(currentAngle));
+                float endY = centerY + radiusY * (float)Math.Sin(DegreeToRadian(currentAngle));
+
+                // 눈금자의 시작점 좌표 계산
+                float startX = centerX + (radiusX - tickLength) * (float)Math.Cos(DegreeToRadian(currentAngle));
+                float startY = centerY + (radiusY - tickLength) * (float)Math.Sin(DegreeToRadian(currentAngle));
+
+                // 눈금자 그리기
+                g.DrawLine(new Pen(Color.Black, tickWidth), startX, startY, endX, endY);
+            }
+        }
+
+        private static void DrawAngleLabel(Graphics g, int centerX, int centerY, float angle)
+        {
+            // 현재 각도 라벨 그리기
+            string angleLabel = $"{angle}°";
+            SizeF textSize = g.MeasureString(angleLabel, new Font("Arial", 15));
+
+            // 현재 각도 라벨 위치 계산
+            float labelX = centerX - textSize.Width / 2;
+            float labelY = centerY - textSize.Height / 2;
+
+            // 현재 각도 라벨 그리기
+            g.DrawString(angleLabel, new Font("Arial", 15), Brushes.Black, labelX, labelY);
+        }
+
+        private static double DegreeToRadian(double angle)
+        {
+            return Math.PI * angle / 180.0;
+        }
         private void SetupViewport()
         {
             if (this.WindowState == FormWindowState.Minimized) return;
@@ -125,11 +253,13 @@ namespace Graphic
             GL.Enable(EnableCap.DepthTest);
             GL.Enable(EnableCap.ColorMaterial);
             GL.Enable(EnableCap.CullFace);
+
         }
 
 
         private void glControl1_Paint(object sender, PaintEventArgs e)
         {
+
             GL.ClearColor(Color.FromArgb(3, 8, 15));
             GL.Clear(ClearBufferMask.ColorBufferBit |
                      ClearBufferMask.DepthBufferBit
@@ -157,7 +287,7 @@ namespace Graphic
             mesh1.Render();
 
             glControl1.SwapBuffers();
-
+            motionGraphics(g);
         }
 
         #region GLControl. Mouse event handlers
@@ -169,8 +299,14 @@ namespace Graphic
         private float panX = 0;
         private float panY = 0;
 
+        private void PaintForm_MouseMove(object sender, MouseEventArgs e)
+        {
+            pointDebug.Text = "x,y = ( " + (e.X) + " , " + (e.Y) + " )";
+        }
+
         private void glControl_MouseMove(object sender, MouseEventArgs e)
         {
+            
             if (e.Button == MouseButtons.Right)
             {
                 angleX -= (e.X - _mouseStartX);
@@ -321,8 +457,6 @@ namespace Graphic
             // button_send.Enabled = false;
             if (serialPort1.IsOpen)  //시리얼포트가 열려 있으면
             {
-                command_bufsize = 0;
-                serialPort1.Close();  //시리얼포트 닫기
                 Zed_Timer.Stop();
                 label_status.Text = "포트가 닫혔습니다.";
                 comboBox_port.Enabled = true;  //COM포트설정 콤보박스 활성화
@@ -330,7 +464,9 @@ namespace Graphic
                 Roll.Clear();
                 Yaw.Clear();
                 x = 0;
-                t= 0;
+                t = 0;
+                serialPort1.Close();  //시리얼포트 닫기
+
             }
             else  //시리얼포트가 닫혀 있으면
             {
@@ -341,7 +477,7 @@ namespace Graphic
         private void Terminal_thread()
         {
             utimer = new SWSleep();
-
+            
 
             string? ReceiveData = string.Empty;
 
@@ -394,7 +530,24 @@ namespace Graphic
 
                                 richTextBox_received.Text = "X축 각도 : " + angleX + "\n" + "Y축 각도 : " + angleY + "\n" + "Z축 각도 : " + -((int.Parse(values[2])));
 
+
                                 glControl1.Invalidate();
+
+                                
+                                
+                                float arrowLength = 100.0f;
+                                float arrowWidth = 10.0f;
+
+                                // 화살표의 끝점 좌표 계산
+
+                                float arrowEndX = centerX + arrowLength * (float)Math.Cos(DegreeToRadian(-((int.Parse(RemoveNonNumericCharacters(values[2]))))));
+                                float arrowEndY = centerY + arrowLength * (float)Math.Sin(DegreeToRadian(-((int.Parse(RemoveNonNumericCharacters(values[2]))))));
+
+
+                                
+                                // 화살표 그리기
+                                g1.DrawLine(new Pen(Color.Red, 2), centerX, centerY, arrowEndX, arrowEndY);
+                                g1.Dispose();
 
                             }
                             catch (IndexOutOfRangeException e) { }
@@ -529,7 +682,7 @@ namespace Graphic
 
 
 
-      
+
 
         private void STOP_btn_Click(object sender, EventArgs e)
         {
@@ -546,11 +699,11 @@ namespace Graphic
             Pitch.Add(x, y_pitch);
             Roll.Add(x, y_roll);
             Yaw.Add(x, y_yaw);
-            
+
             x += 0.5;
             y_pitch = angleX;
             y_roll = angleY;
-            y_yaw = -((int.Parse(values[2])));
+            y_yaw = -((int.Parse(RemoveNonNumericCharacters(values[2]))));
 
             if (x >= 20)
             {
@@ -560,5 +713,7 @@ namespace Graphic
             }
             zedGraphControl1.Refresh();
         }
+
+        
     }
 }

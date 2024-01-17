@@ -2,6 +2,7 @@
 using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL;
 using System.IO.Ports;
+using System.Text;
 using System.Windows.Forms;
 using ZedGraph;
 
@@ -36,9 +37,9 @@ namespace Graphic
         private void InitializeComponent()
         {
             components = new System.ComponentModel.Container();
-            System.Text.ASCIIEncoding asciiEncoding1 = new System.Text.ASCIIEncoding();
-            System.Text.DecoderReplacementFallback decoderReplacementFallback1 = new System.Text.DecoderReplacementFallback();
-            System.Text.EncoderReplacementFallback encoderReplacementFallback1 = new System.Text.EncoderReplacementFallback();
+            ASCIIEncoding asciiEncoding1 = new ASCIIEncoding();
+            DecoderReplacementFallback decoderReplacementFallback1 = new DecoderReplacementFallback();
+            EncoderReplacementFallback encoderReplacementFallback1 = new EncoderReplacementFallback();
             glControl1 = new GLControl();
             closeBtn = new Button();
             zedGraphControl1 = new ZedGraphControl();
@@ -49,6 +50,7 @@ namespace Graphic
             richTextBox_received = new RichTextBox();
             button_disconnect = new Button();
             myTimer = new System.Windows.Forms.Timer(components);
+            pointDebug = new System.Windows.Forms.Label();
             SuspendLayout();
             // 
             // glControl1
@@ -129,6 +131,8 @@ namespace Graphic
             serialPort1.DataBits = 8;
             serialPort1.DiscardNull = false;
             serialPort1.DtrEnable = false;
+            //asciiEncoding1.DecoderFallback = decoderReplacementFallback1;
+            //asciiEncoding1.EncoderFallback = encoderReplacementFallback1;
             serialPort1.Encoding = asciiEncoding1;
             serialPort1.Handshake = Handshake.None;
             serialPort1.NewLine = "\n";
@@ -159,7 +163,7 @@ namespace Graphic
             richTextBox_received.BackColor = Color.FromArgb(3, 8, 15);
             richTextBox_received.BorderStyle = BorderStyle.None;
             richTextBox_received.ForeColor = Color.Lime;
-            richTextBox_received.Location = new Point(785, 509);
+            richTextBox_received.Location = new Point(80, 22);
             richTextBox_received.Name = "richTextBox_received";
             richTextBox_received.Size = new Size(367, 183);
             richTextBox_received.TabIndex = 7;
@@ -178,6 +182,17 @@ namespace Graphic
             button_disconnect.UseVisualStyleBackColor = false;
             button_disconnect.Click += button_disconnect_Click_1;
             // 
+            // pointDebug
+            // 
+            pointDebug.AutoSize = true;
+            pointDebug.ForeColor = Color.Lime;
+            pointDebug.Location = new Point(1700, 36);
+            pointDebug.Name = "pointDebug";
+            pointDebug.Size = new Size(26, 20);
+            pointDebug.TabIndex = 11;
+            pointDebug.Text = "x,y";
+     
+            // 
             // PaintForm
             // 
             AutoScaleDimensions = new SizeF(9F, 20F);
@@ -185,6 +200,7 @@ namespace Graphic
             BackColor = Color.FromArgb(3, 8, 15);
             BackgroundImageLayout = ImageLayout.None;
             ClientSize = new Size(1920, 1061);
+            Controls.Add(pointDebug);
             Controls.Add(button_disconnect);
             Controls.Add(richTextBox_received);
             Controls.Add(label_status);
@@ -199,6 +215,7 @@ namespace Graphic
             StartPosition = FormStartPosition.Manual;
             Text = "PaintForm";
             Load += PaintForm_Load;
+            MouseMove += PaintForm_MouseMove;
             ResumeLayout(false);
             PerformLayout();
         }
@@ -214,5 +231,6 @@ namespace Graphic
         private RichTextBox richTextBox_received;
         private Button button_disconnect;
         private System.Windows.Forms.Timer myTimer;
+        private System.Windows.Forms.Label pointDebug;
     }
 }
